@@ -1,141 +1,195 @@
-# logichain
-A decentralized, coordinate-based blockchain for real-world logistics and delivery tracking. Built with Python, FastAPI, and Leaflet.js. It verifies Proof of Delivery (POD) via secure checkpoints, maintains reputation by region, and distributes rewards fairly using geolocated smart contracts.
+# LogiChain
+
+A decentralized, coordinate-based blockchain for real-world logistics and delivery tracking.
+
+LogiChain is an innovative blockchain system designed for logistics, built in Python. It verifies Proof of Delivery (PoD) through secure geolocated checkpoints, tracks regional reputation, and fairly distributes rewards using smart contracts based on real-world coordinates.
+
+---
+
+## Key Features
+
+* Decentralized smart contracts with real-world geocoordinates
+* Proof of Delivery (PoD) verification via cryptographic checkpoints
+* Fair reward system based on region and delivery reputation
+* Modular blockchain with hybrid consensus (PoW + PoD + BFT)
+* Encrypted logs and tamper-resistant data
+* Simulation tools and REST API included
+
+---
+
+## System Architecture
+
+```
+logichain/
+├── core/
+│   ├── blockchain.py         # Blockchain coordination & block creation
+│   ├── coordinate_grid.py    # Global coordinate grid (65,341 zones)
+│   ├── contract.py           # Smart contract engine
+│   └── block.py              # Block structure & validation
+├── consensus/
+│   ├── bft_consensus.py      # Byzantine Fault Tolerant logic
+│   └── hybrid_consensus.py   # Hybrid PoW/PoD consensus mechanism
+├── security/
+│   ├── security_manager.py   # Replay protection, anomaly detection
+│   └── contracts/pod_contract.py # Proof of Delivery contracts
+├── network/
+│   ├── p2p_network.py        # Peer-to-peer communication
+│   └── node.py               # Node logic & message relay
+├── tokenomics/
+│   ├── tokenomics.py         # Token distribution & halving
+│   └── wallet.py             # Wallets & user balances
+├── api/
+│   └── rest_api.py           # FastAPI backend interface
+├── simulator/
+│   └── delivery_simulator.py # Delivery scenario testing
+├── storage/
+│   └── persistence.py        # Data persistence & recovery
+└── tests/
+    ├── test_integration.py   # System-wide integration tests
+    └── test_stress.py        # Load and stress testing
+```
+
+---
+
+## Security Architecture
+
+* Replay protection: Nonce cache validation
+* Integrity: Hash-chained logs
+* Checkpoint control: Geofencing + timestamp proof
+* Anomaly detection: Contract frequency and misuse alerts
+* Contract expiration: Automatic time-based lockout
+* Rate limiting: Max transactions per coordinate region
+* Configurable thresholds:
+
+  * MAX\_OPERATIONS\_PER\_MINUTE = 60
+  * MAX\_COORDINATE\_OPS = 100
+  * TIMESTAMP\_TOLERANCE = 300
+  * BACKUP\_INTERVAL = 3600
+
+---
+
+## Coordinate Grid
+
+* 181 × 361 coordinate grid (lat: -90~~90, lng: -180~~180)
+* 65,341 zones tracked
+* Stats per coordinate:
+
+  * Total contracts
+  * Success rate
+  * Avg. delivery time
+  * Last activity timestamp
 
+---
+
+## Wallet Metrics
 
-LogiChain: Decentralized Logistics Blockchain System
+```python
+class WalletMetrics:
+    total_deliveries: int
+    total_revenue: float
+    completed_contracts: int
+    avg_rating: float
+    reputation_score: float
+```
 
-LogiChain is a decentralized logistics and delivery tracking system designed to eliminate centralized intermediaries and ensure transparency, accountability, and automation through blockchain technology. It provides a peer-to-peer (P2P) infrastructure for managing delivery contracts, validating proof of delivery, and distributing rewards based on geolocated checkpoints. The system is implemented in Python, uses FastAPI for its backend services, and features an interactive frontend powered by Leaflet.js.
+---
 
-System Overview
+## Contract Lifecycle
 
-The system is structured around modular Python components, each fulfilling a specific function. Below is a summary of each module:
+* ContractState handles state transitions
+* Checkpoints include:
 
-Core Layer
+  * Timestamp
+  * GPS coordinates
+  * Temperature / Humidity
+  * Shock detection
+* Timestamps validated against tolerance
 
-blockchain.py: Coordinates block creation, chain validation, and transaction flow.
+---
 
-coordinate_grid.py: Manages a global index of 65,341 geographic coordinates for delivery operations.
+## Simulated Deliveries
 
-contract.py: Handles smart contracts tied to delivery logistics.
+```python
+def generate_contract_data():
+    return {
+        'cargo_type': ['Electronics', 'Food', 'Clothing', 'Materials'],
+        'weight': random.uniform(1, 1000),
+        'volume': random.uniform(1, 100),
+        'priority': ['Low', 'Medium', 'High', 'Urgent'],
+        'estimated_value': random.uniform(100, 10000)
+    }
+```
 
-block.py: Defines the data structure of each block and includes validation routines.
+---
 
-Consensus Layer
+## Network Configuration
 
-bft_consensus.py: Implements Byzantine Fault Tolerance to ensure trust in validator selection.
+* P2P default port: 30303
+* API default port: 8545
+* Max peers: 50
+* Mandatory: SSL/TLS encryption
 
-hybrid_consensus.py: Merges Proof of Work (PoW) and Proof of Delivery (PoD) into a hybrid consensus algorithm.
+---
 
-Security Layer
+## Tokenomics
 
-security_manager.py: Validates transactions, prevents replay attacks, monitors anomalies, and limits coordinate saturation.
+```python
+@dataclass
+class TokenDistribution:
+    genesis_wallets: int = 1000
+    initial_balance: int = 1000
+    total_initial_supply: int = genesis_wallets * initial_balance
+    max_supply: int = 100_000_000
+```
 
-pod_contract.py: Manages Proof of Delivery contracts with privacy-preserving features.
+* Halving every 4 years
+* Mining rewards split between:
 
-Network Layer
+  * Delivery drivers
+  * Validator pools
 
-p2p_network.py: Manages node discovery, synchronization, and block propagation across the decentralized network.
+---
 
-node.py: Provides the operational logic of each node in the network.
+## Testing Framework
 
-Tokenomics
+* Integration Tests
+* Stress Tests:
 
-tokenomics.py: Manages token issuance, distribution schedules, and mining rewards.
+  * 1000 contracts
+  * 5 checkpoints each
+  * Multi-threaded
+  * Batches of 50 ops
 
-wallet.py: Manages user identities, wallets, and signing keys.
+---
 
-API Layer
+## Frontend (React)
 
-rest_api.py: Exposes a RESTful API for contract interaction, delivery status queries, and public chain data.
+* InteractiveMap: Geocoordinate visualization
+* GlobalStats: Realtime metrics dashboard
+* ContractList: Browse/filter contracts
+* SecurityLog: View security alerts
+* DeliverySimulator: Simulate full cycle
 
-Simulator
+---
 
-delivery_simulator.py: Emulates real-world delivery conditions and simulates contract fulfillment cycles.
+## Logging & Monitoring
 
-Storage
+Tracks:
 
-persistence.py: Implements snapshot saving, historical recovery, and blockchain state management.
+* Wallet creation
+* Contract events
+* PoD checkpoints
+* Security incidents
+* State changes
 
-Functional Workflow
+---
 
-The delivery flow in LogiChain is automated, transparent, and securely validated through the following steps:
+## License
 
-Contract Initialization
+MIT License — see `LICENSE` file.
 
-A logistics provider defines the delivery origin and destination using geographic coordinates.
+---
 
-The contract is cryptographically validated and recorded on the blockchain.
+## Contact
 
-Delivery Execution
-
-A driver accepts the delivery contract.
-
-Checkpoints are logged as the delivery progresses.
-
-Upon reaching the final destination, the system validates the Proof of Delivery based on encrypted and timestamped GPS data.
-
-Reward Distribution
-
-Upon successful validation, the reward is distributed between the driver and associated stakeholders (e.g., validators, pools).
-
-Consensus Architecture
-
-LogiChain uses a hybrid consensus model with the following components:
-
-Proof of Work to initialize and secure blocks.
-
-Proof of Delivery to validate real-world delivery events through geolocation.
-
-Byzantine Fault Tolerance to allow honest nodes to reach consensus even in the presence of malicious actors.
-
-Reputation Systems to enforce Sybil resistance.
-
-View Change Protocols to support recovery from validator failure.
-
-Security Measures
-
-LogiChain integrates security measures across all layers of the architecture:
-
-Digital signatures for transaction authentication.
-
-Nonce-based replay protection.
-
-Anomaly detection systems to prevent fraud.
-
-Coordinate saturation management to prevent DoS attacks.
-
-Optional payload encryption and ZK-proof integrations for privacy.
-
-Token Economy
-
-The maximum supply is fixed at 100 million tokens.
-
-Genesis distribution includes 1,000 wallets with 1,000 tokens each.
-
-Mining rewards follow a halving schedule every four years.
-
-Reward distribution splits earnings between delivery drivers and validator pools.
-
-Network Design
-
-Peer-to-peer communication allows independent nodes to broadcast blocks and transactions without a central authority.
-
-Synchronization algorithms ensure blockchain consistency across the network.
-
-REST API endpoints and optional WebSocket services provide real-time system interaction.
-
-Scalability and Future Extensions
-
-LogiChain is designed to support:
-
-Sharding for performance optimization.
-
-Layer 2 scaling with payment channels or rollups.
-
-Cross-chain bridges for interoperability with external blockchains.
-
-An integrated analytics dashboard and route optimization engine.
-
-Conclusion
-
-LogiChain is an end-to-end decentralized logistics protocol built to serve the future of transparent, fair, and cryptographically secure delivery services. It provides strong guarantees of proof, privacy, and integrity while aligning economic incentives with real-world value. Its modular architecture and P2P foundation make it an ideal protocol for communities, enterprises, and decentralized platforms seeking trustless coordination and autonomous execution of deliveries.
+Developed by Caio RLM — Contributions welcome!
