@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LogiChain Mesh Network Visualizer</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Vis.js for network visualization -->
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    
+    <style>
+        #network {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ddd;
+            background-color: #f8f9fa;
+        }
+        
+        .node-details {
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        
+        .event-log {
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .status-badge {
+            font-size: 0.8em;
+            padding: 3px 8px;
+        }
+        
+        .node-online {
+            color: #198754;
+        }
+        
+        .node-offline {
+            color: #dc3545;
+        }
+        
+        .node-bridge {
+            color: #0d6efd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <h1 class="mb-4">LogiChain Mesh Network Visualizer</h1>
+        
+        <div class="row">
+            <!-- Network Visualization -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Network Topology</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="network"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Node Details -->
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Node Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="nodeDetails" class="node-details">
+                            <p class="text-muted">Select a node to view details</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Network Stats -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Network Statistics</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="mb-3">
+                                    <label class="small text-muted">Total Nodes</label>
+                                    <h4 id="totalNodes">0</h4>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="mb-3">
+                                    <label class="small text-muted">Bridge Nodes</label>
+                                    <h4 id="bridgeNodes">0</h4>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="mb-3">
+                                    <label class="small text-muted">Online Nodes</label>
+                                    <h4 id="onlineNodes">0</h4>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="mb-3">
+                                    <label class="small text-muted">Offline Nodes</label>
+                                    <h4 id="offlineNodes">0</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Event Log -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Event Log</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="eventLog" class="event-log"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Network visualization
+        const nodes = new vis.DataSet();
+        const edges = new vis.DataSet();
+        
+        const container = document.getElementById('network');
+        const data = {
+            nodes: nodes,
+            edges: edges
+        };
+        
+        const options = {
+            nodes: {
+                shape: 'dot',
+                size: 20,
+                font: {
+                    size: 14
+                }
+            },
+            edges: {
+                width: 2,
+                smooth: {
+                    type: 'continuous'
+                }
+            },
+            physics: {
+                stabilization: false,
+                barnesHut: {
+                    gravitationalConstant: -80000,
+                    springConstant: 0.001,
+                    springLength: 200
+                }
+            }
+        };
+        
+        const network = new vis.Network(container, data, options);
+        
+        // Node details
+        network.on('click', function(params) {
+            if (params.nodes.length > 0) {
+                const nodeId = params.nodes[0];
+                const node = nodes.get(nodeId);
+                showNodeDetails(node);
+            }
+        });
+        
+        function showNodeDetails(node) {
+            const details = document.getElementById('nodeDetails');
+            details.innerHTML = `
+                <h5>${node.label}</h5>
+                <div class="mb-2">
+                    <span class="badge bg-secondary status-badge">${node.status}</span>
+                    ${node.isBridge ? '<span class="badge bg-primary status-badge">Bridge</span>' : ''}
+                </div>
+                <div class="small text-muted mb-2">Last seen: ${formatTimestamp(node.lastSeen)}</div>
+                <div class="mb-2">
+                    <strong>Stake:</strong> ${node.stake}
+                </div>
+                ${node.location ? `<div class="mb-2"><strong>Location:</strong> ${node.location}</div>` : ''}
+            `;
+        }
+        
+        // Event log
+        function addEvent(event) {
+            const log = document.getElementById('eventLog');
+            const entry = document.createElement('div');
+            entry.className = 'mb-2';
+            entry.innerHTML = `
+                <span class="text-muted">${formatTimestamp(event.timestamp)}</span>
+                <span class="ms-2">${event.message}</span>
+            `;
+            log.insertBefore(entry, log.firstChild);
+        }
+        
+        // Utility functions
+        function formatTimestamp(timestamp) {
+            return new Date(timestamp).toLocaleString();
+        }
+        
+        function updateStats(stats) {
+            document.getElementById('totalNodes').textContent = stats.total;
+            document.getElementById('bridgeNodes').textContent = stats.bridges;
+            document.getElementById('onlineNodes').textContent = stats.online;
+            document.getElementById('offlineNodes').textContent = stats.offline;
+        }
+        
+        // WebSocket connection
+        const ws = new WebSocket(`ws://${window.location.host}/mesh/ws`);
+        
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            
+            switch (data.type) {
+                case 'node_update':
+                    updateNode(data.node);
+                    break;
+                case 'edge_update':
+                    updateEdge(data.edge);
+                    break;
+                case 'stats_update':
+                    updateStats(data.stats);
+                    break;
+                case 'event':
+                    addEvent(data.event);
+                    break;
+            }
+        };
+        
+        function updateNode(nodeData) {
+            const node = {
+                id: nodeData.node_id,
+                label: nodeData.node_id.substring(0, 8),
+                status: nodeData.status,
+                isBridge: nodeData.is_bridge,
+                lastSeen: nodeData.last_seen,
+                stake: nodeData.stake,
+                location: nodeData.location,
+                color: getNodeColor(nodeData.status)
+            };
+            
+            nodes.update(node);
+        }
+        
+        function updateEdge(edgeData) {
+            const edge = {
+                id: edgeData.id,
+                from: edgeData.from,
+                to: edgeData.to,
+                arrows: edgeData.is_bridge ? 'to' : null
+            };
+            
+            edges.update(edge);
+        }
+        
+        function getNodeColor(status) {
+            switch (status) {
+                case 'online':
+                    return '#198754';
+                case 'offline':
+                    return '#dc3545';
+                case 'bridge':
+                    return '#0d6efd';
+                default:
+                    return '#6c757d';
+            }
+        }
+    </script>
+</body>
+</html> 

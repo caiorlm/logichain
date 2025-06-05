@@ -1,0 +1,55 @@
+{
+  "timestamp": 1710864000,
+  "version": "1.0.0",
+  "nodes": [
+    {
+      "address": "seed1.logichain.network",
+      "port": 8333,
+      "region": "us-east",
+      "type": "validator",
+      "version": "1.0.0"
+    },
+    {
+      "address": "seed2.logichain.network", 
+      "port": 8333,
+      "region": "us-west",
+      "type": "validator",
+      "version": "1.0.0"
+    },
+    {
+      "address": "seed3.logichain.network",
+      "port": 8333,
+      "region": "eu-central",
+      "type": "validator",
+      "version": "1.0.0"
+    },
+    {
+      "address": "seed4.logichain.network",
+      "port": 8333,
+      "region": "ap-southeast",
+      "type": "validator",
+      "version": "1.0.0"
+    },
+    {
+      "address": "node1.logichain.network",
+      "port": 8333,
+      "region": "us-east",
+      "type": "full_node",
+      "version": "1.0.0"
+    },
+    {
+      "address": "node2.logichain.network",
+      "port": 8333,
+      "region": "eu-west",
+      "type": "full_node",
+      "version": "1.0.0"
+    },
+    {
+      "address": "node3.logichain.network",
+      "port": 8333,
+      "region": "ap-east",
+      "type": "full_node",
+      "version": "1.0.0"
+    }
+  ]
+} 

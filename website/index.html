@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="LogiChain - Blockchain Logística">
+    <meta name="theme-color" content="#0066cc">
+    <title>LogiChain - Blockchain Logística</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="assets/favicon.ico">
+    <link rel="apple-touch-icon" href="assets/icon-192.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Fallback para browsers antigos -->
+    <!--[if lt IE 9]>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+    <header class="main-header">
+        <nav class="main-nav">
+            <div class="logo">
+                <img src="assets/logo.svg" alt="LogiChain Logo" width="180" height="40">
+            </div>
+            <ul class="nav-links">
+                <li><a href="#visao-geral">Visão Geral</a></li>
+                <li><a href="#roadmap">Roadmap</a></li>
+                <li><a href="#documentacao">Documentação</a></li>
+                <li><a href="#blockchain">Blockchain</a></li>
+                <li><a href="#explorer">Explorer</a></li>
+                <li><a href="#contato">Contato</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="scroll-timeline">
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div class="hero-content">
+                <h1>LogiChain</h1>
+                <p class="hero-subtitle">Blockchain Logística de Nova Geração</p>
+                <div class="hero-actions">
+                    <a href="#visao-geral" class="btn btn-primary">
+                        <i class="fas fa-rocket"></i> Começar
+                    </a>
+                    <a href="#documentacao" class="btn btn-secondary">
+                        <i class="fas fa-book"></i> Documentação
+                    </a>
+                </div>
+                <div class="hero-features">
+                    <div class="feature">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Segurança</span>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-project-diagram"></i>
+                        <span>Descentralização</span>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Performance</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-background"></div>
+        </section>
+
+        <!-- Seção 1: Visão Geral -->
+        <section id="visao-geral" class="timeline-section">
+            <div class="section-content">
+                <h2>Visão Geral da LogiChain</h2>
+                <div class="whitepaper-section">
+                    <div class="whitepaper-content" id="whitepaper-content">
+                        <!-- Conteúdo dinâmico do whitepaper -->
+                    </div>
+                    <div class="whitepaper-actions">
+                        <a href="/docs/whitepaper.pdf" class="btn btn-primary">Download Whitepaper</a>
+                        <button class="btn btn-secondary" id="show-summary">Ver Sumário</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seção 2: Roadmap -->
+        <section id="roadmap" class="timeline-section">
+            <div class="section-content">
+                <h2>Roadmap</h2>
+                <div class="roadmap-timeline" id="roadmap-timeline">
+                    <!-- Roadmap dinâmico aqui -->
+                </div>
+                <div class="development-stats" id="development-stats">
+                    <!-- Estatísticas de desenvolvimento aqui -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Seção 3: Documentação -->
+        <section id="documentacao" class="timeline-section">
+            <div class="section-content">
+                <h2>Documentação Técnica</h2>
+                <div class="docs-container">
+                    <aside class="docs-menu" id="docs-menu">
+                        <!-- Menu lateral dinâmico será preenchido via JavaScript -->
+                    </aside>
+                    <div class="docs-content" id="docs-content">
+                        <!-- Conteúdo da documentação será preenchido via JavaScript -->
+                    </div>
+                </div>
+
+                <div class="docs-overview">
+                    <h3>Estrutura do Sistema</h3>
+                    <div class="docs-grid">
+                        <div class="docs-card">
+                            <h4>Core do Sistema</h4>
+                            <ul>
+                                <li>main.py - Ponto de entrada</li>
+                                <li>network.py - Rede P2P</li>
+                                <li>config.py - Configurações</li>
+                            </ul>
+                        </div>
+                        <div class="docs-card">
+                            <h4>Nós da Rede</h4>
+                            <ul>
+                                <li>driver_node.py - Nó Motorista</li>
+                                <li>establishment_node.py - Nó Estabelecimento</li>
+                                <li>executor_node.py - Nó Validador</li>
+                            </ul>
+                        </div>
+                        <div class="docs-card">
+                            <h4>Genesis e Inicialização</h4>
+                            <ul>
+                                <li>genesis_block.py</li>
+                                <li>initialize_blockchain.py</li>
+                                <li>verify_genesis.py</li>
+                            </ul>
+                        </div>
+                        <div class="docs-card">
+                            <h4>Servidores e APIs</h4>
+                            <ul>
+                                <li>api_server.py - API REST</li>
+                                <li>web_server.py - Interface Web</li>
+                                <li>integrated_server.py - Servidor Integrado</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="docs-actions">
+                        <a href="/docs/API.md" class="btn btn-primary" target="_blank">
+                            <i class="fas fa-book"></i> API Reference
+                        </a>
+                        <a href="/docs/ARCHITECTURE.md" class="btn btn-secondary" target="_blank">
+                            <i class="fas fa-project-diagram"></i> Arquitetura
+                        </a>
+                        <a href="/docs/whitepaper.md" class="btn btn-secondary" target="_blank">
+                            <i class="fas fa-file-alt"></i> Whitepaper
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seção 4: Blockchain -->
+        <section id="blockchain" class="timeline-section">
+            <div class="section-content">
+                <h2>Nó e Blockchain</h2>
+                <div class="blockchain-info">
+                    <div class="node-status" id="node-status">
+                        <!-- Status dos nós -->
+                    </div>
+                    <div class="node-architecture">
+                        <img src="assets/architecture.svg" alt="Arquitetura da LogiChain" class="arch-diagram">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seção 5: API Explorer -->
+        <section id="explorer" class="timeline-section">
+            <div class="section-content">
+                <h2>API Explorer</h2>
+                <div class="api-explorer" id="api-explorer">
+                    <div class="endpoint-list">
+                        <!-- Lista de endpoints -->
+                    </div>
+                    <div class="endpoint-tester">
+                        <!-- Interface de teste -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seção 6: POD -->
+        <section id="pod" class="timeline-section">
+            <div class="section-content">
+                <h2>Proof of Delivery (POD)</h2>
+                <div class="pod-demo">
+                    <div class="pod-map" id="pod-map">
+                        <!-- Mapa de demonstração -->
+                    </div>
+                    <div class="pod-info">
+                        <!-- Informações do POD -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seção 7: Wallet -->
+        <section id="wallet" class="timeline-section">
+            <div class="section-content">
+                <h2>Wallet e Reputação</h2>
+                <div class="wallet-interface">
+                    <div class="wallet-status" id="wallet-status">
+                        <!-- Status da carteira -->
+                    </div>
+                    <div class="reputation-levels">
+                        <!-- Níveis de reputação -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seção 8: Segurança -->
+        <section id="seguranca" class="timeline-section">
+            <div class="section-content">
+                <h2>Segurança e Criptografia</h2>
+                <div class="security-info">
+                    <div class="security-features">
+                        <!-- Features de segurança -->
+                    </div>
+                    <div class="genesis-block">
+                        <code id="genesis-hash">
+                            <!-- Hash do bloco genesis -->
+                        </code>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seção 9: Mineração -->
+        <section id="mineracao" class="timeline-section">
+            <div class="section-content">
+                <h2>Mineração e Consenso</h2>
+                <div class="mining-info">
+                    <div class="mining-flow">
+                        <!-- Fluxo de mineração -->
+                    </div>
+                    <div class="block-example">
+                        <!-- Exemplo de bloco -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seção 10: DAO -->
+        <section id="dao" class="timeline-section">
+            <div class="section-content">
+                <h2>Governança DAO</h2>
+                <div class="dao-interface">
+                    <div class="dao-proposals" id="dao-proposals">
+                        <!-- Propostas ativas -->
+                    </div>
+                    <div class="dao-voting">
+                        <!-- Interface de votação -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seção 11: Oráculos -->
+        <section id="oraculos" class="timeline-section">
+            <div class="section-content">
+                <h2>Oráculos e Bridge</h2>
+                <div class="oracle-info">
+                    <div class="oracle-data">
+                        <!-- Dados dos oráculos -->
+                    </div>
+                    <div class="bridge-status">
+                        <!-- Status das bridges -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seção 12: Explorer -->
+        <section id="blockchain-explorer" class="timeline-section">
+            <div class="section-content">
+                <h2>Explorador Blockchain</h2>
+                <div class="explorer-interface">
+                    <div class="search-bar">
+                        <input type="text" id="explorer-search" placeholder="Buscar por hash, endereço ou bloco...">
+                        <button class="btn btn-primary" id="search-btn">Buscar</button>
+                    </div>
+                    <div class="explorer-results" id="explorer-results">
+                        <!-- Resultados da busca -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seção 13: Suporte -->
+        <section id="contato" class="timeline-section">
+            <div class="section-content">
+                <h2>Suporte e Doação</h2>
+                <div class="contact-info">
+                    <div class="support-channels">
+                        <a href="https://wa.me/351XXXXXXXXX" class="support-link whatsapp">WhatsApp</a>
+                        <a href="mailto:contato@logichain.org" class="support-link email">E-mail</a>
+                        <a href="https://seudominio.com" class="support-link website">Website</a>
+                    </div>
+                    <div class="donation">
+                        <h3>Chave de Doação</h3>
+                        <code class="donation-key">0xABCDEF1234567890...</code>
+                    </div>
+                    <form id="contact-form" class="contact-form">
+                        <div class="form-group">
+                            <label for="name">Nome</label>
+                            <input type="text" id="name" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="message">Mensagem</label>
+                            <textarea id="message" name="message" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Enviar</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seção 14: Segurança Total -->
+        <section id="seguranca-total" class="timeline-section">
+            <div class="section-content">
+                <h2>Segurança Total e Configuração</h2>
+                <div class="security-config">
+                    <div class="security-features">
+                        <ul>
+                            <li>Suporte HTTP/HTTPS</li>
+                            <li>Acesso via IP e DNS</li>
+                            <li>SSL via generate_ssl_certs.py</li>
+                            <li>Proteção contra bots e DDoS</li>
+                            <li>Firewall e headers seguros</li>
+                        </ul>
+                    </div>
+                    <div class="config-example">
+                        <code id="config-preview">
+                            <!-- Preview de configuração -->
+                        </code>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <div class="footer-content">
+            <div class="footer-logo">
+                <img src="assets/logo-white.svg" alt="LogiChain" width="120" height="30">
+            </div>
+            <div class="footer-links">
+                <h4>Links Rápidos</h4>
+                <ul>
+                    <li><a href="#visao-geral">Visão Geral</a></li>
+                    <li><a href="#roadmap">Roadmap</a></li>
+                    <li><a href="#documentacao">Documentação</a></li>
+                    <li><a href="#contato">Contato</a></li>
+                </ul>
+            </div>
+            <div class="footer-social">
+                <h4>Redes Sociais</h4>
+                <ul>
+                    <li><a href="https://twitter.com/logichain" target="_blank" rel="noopener">Twitter</a></li>
+                    <li><a href="https://github.com/logichain" target="_blank" rel="noopener">GitHub</a></li>
+                    <li><a href="https://t.me/logichain" target="_blank" rel="noopener">Telegram</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 LogiChain. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <noscript>
+        <div class="noscript-warning">
+            Para melhor experiência, ative o JavaScript no seu navegador.
+        </div>
+    </noscript>
+
+    <script src="js/main.js" defer></script>
+</body>
+</html> 

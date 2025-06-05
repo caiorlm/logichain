@@ -1,0 +1,32 @@
+{
+    "initialization": {
+        "rule_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "code_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "quorum_required": 3,
+        "description": "System initialization rule requiring quorum approval"
+    },
+    "consensus": {
+        "rule_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "code_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "quorum_required": 3,
+        "description": "Consensus validation and block approval rules"
+    },
+    "integrity": {
+        "rule_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "code_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "quorum_required": 3,
+        "description": "Code and data integrity verification rules"
+    },
+    "security": {
+        "rule_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "code_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "quorum_required": 3,
+        "description": "Security policy and access control rules"
+    },
+    "network": {
+        "rule_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "code_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "quorum_required": 3,
+        "description": "Network communication and synchronization rules"
+    }
+} 

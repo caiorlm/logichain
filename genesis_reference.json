@@ -1,0 +1,11 @@
+{
+    "genesis_hash": "b6bcc7dc4f4fc7d0f6adac75cd86193695c68f7d6022a7fadf8f94e0c1f132c4",
+    "timestamp": 0,
+    "coordinates": [
+        0.0,
+        0.0
+    ],
+    "contract_id": "GENESIS_BLOCK_V1",
+    "proof": "GENESIS_PROOF_V1",
+    "created_at": 1748889711.2645907
+}

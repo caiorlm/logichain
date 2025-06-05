@@ -1,0 +1,173 @@
+groups:
+- name: logichain_alerts
+  rules:
+  # System Resources
+  - alert: HighCPUUsage
+    expr: rate(process_cpu_seconds_total[5m]) * 100 > 80
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: High CPU usage (instance {{ $labels.instance }})
+      description: CPU usage is above 80% for 5 minutes
+
+  - alert: HighMemoryUsage
+    expr: (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100 > 85
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: High memory usage (instance {{ $labels.instance }})
+      description: Memory usage is above 85% for 5 minutes
+
+  - alert: HighDiskUsage
+    expr: (node_filesystem_size_bytes - node_filesystem_free_bytes) / node_filesystem_size_bytes * 100 > 85
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: High disk usage (instance {{ $labels.instance }})
+      description: Disk usage is above 85% for 5 minutes
+
+  # Container Health
+  - alert: ContainerDown
+    expr: time() - container_last_seen > 60
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: Container down (instance {{ $labels.instance }})
+      description: Container {{ $labels.name }} is down for more than 1 minute
+
+  - alert: ContainerHighRestart
+    expr: changes(container_start_time_seconds[1h]) > 5
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: Container high restart count (instance {{ $labels.instance }})
+      description: Container {{ $labels.name }} has restarted more than 5 times in 1 hour
+
+  # API Health
+  - alert: APIHighLatency
+    expr: http_request_duration_seconds{quantile="0.9"} > 1
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: API high latency (instance {{ $labels.instance }})
+      description: API latency is above 1 second for 90% of requests
+
+  - alert: APIHighErrorRate
+    expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) * 100 > 5
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: API high error rate (instance {{ $labels.instance }})
+      description: API error rate is above 5% for 5 minutes
+
+  # Blockchain Health
+  - alert: BlockchainSyncDelay
+    expr: time() - blockchain_last_block_timestamp > 300
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: Blockchain sync delay (instance {{ $labels.instance }})
+      description: No new blocks for more than 5 minutes
+
+  - alert: BlockchainHighOrphanRate
+    expr: rate(blockchain_orphan_blocks_total[1h]) > 1
+    for: 15m
+    labels:
+      severity: warning
+    annotations:
+      summary: High orphan block rate (instance {{ $labels.instance }})
+      description: More than 1 orphan block per hour for 15 minutes
+
+  # Network Health
+  - alert: P2PNetworkLowPeers
+    expr: p2p_connected_peers < 3
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: Low P2P peer count (instance {{ $labels.instance }})
+      description: Less than 3 P2P peers connected for 5 minutes
+
+  - alert: P2PNetworkHighLatency
+    expr: p2p_message_latency_seconds{quantile="0.9"} > 2
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: High P2P network latency (instance {{ $labels.instance }})
+      description: P2P message latency is above 2 seconds for 90% of messages
+
+  # Contract Execution
+  - alert: ContractExecutionFailure
+    expr: rate(contract_execution_failures_total[5m]) > 0
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: Contract execution failures (instance {{ $labels.instance }})
+      description: Smart contract execution failures detected
+
+  - alert: ContractHighGasUsage
+    expr: contract_gas_used / contract_gas_limit > 0.9
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: High contract gas usage (instance {{ $labels.instance }})
+      description: Contract gas usage is above 90% of limit
+
+  # SSL Certificate
+  - alert: SSLCertificateExpiringSoon
+    expr: ssl_certificate_expiry_seconds < 2592000
+    for: 1h
+    labels:
+      severity: warning
+    annotations:
+      summary: SSL certificate expiring soon (instance {{ $labels.instance }})
+      description: SSL certificate will expire in less than 30 days
+
+  # Database
+  - alert: DatabaseHighConnections
+    expr: postgresql_numbackends / postgresql_conf_max_connections > 0.8
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: High database connections (instance {{ $labels.instance }})
+      description: Database connection count is above 80% of maximum
+
+  - alert: DatabaseSlowQueries
+    expr: rate(postgresql_slow_queries_total[5m]) > 1
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: Slow database queries (instance {{ $labels.instance }})
+      description: More than 1 slow query per minute for 5 minutes
+
+  # Validation
+  - alert: ValidatorMissedBlocks
+    expr: rate(validator_missed_blocks_total[1h]) > 0
+    for: 15m
+    labels:
+      severity: warning
+    annotations:
+      summary: Validator missing blocks (instance {{ $labels.instance }})
+      description: Validator has missed blocks in the last hour
+
+  - alert: ValidatorLowStake
+    expr: validator_stake < validator_minimum_stake
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: Validator low stake (instance {{ $labels.instance }})
+      description: Validator stake is below minimum required 

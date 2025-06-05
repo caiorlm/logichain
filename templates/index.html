@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blockchain Logistics Dashboard</title>
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <!-- PWA Support -->
+    <meta name="theme-color" content="#2196f3">
+    <link rel="apple-touch-icon" href="/static/img/icon-192x192.png">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>Blockchain Logistics</h1>
+            <div class="network-status">
+                <span id="mode-indicator" class="offline">Offline</span>
+                <span id="sync-status">Última sincronização: Nunca</span>
+            </div>
+            <div class="wallet-status" id="wallet-status">
+                <span>Não conectado</span>
+                <div class="wallet-buttons">
+                    <button id="connect-wallet" class="btn primary">Conectar Wallet</button>
+                </div>
+            </div>
+        </header>
+
+        <nav class="sidebar">
+            <ul>
+                <li><a href="#dashboard" class="active">Dashboard</a></li>
+                <li><a href="#blocks">Blocos</a></li>
+                <li><a href="#contracts">Contratos</a></li>
+                <li><a href="#mining">Mineração</a></li>
+                <li><a href="#wallet">Wallet</a></li>
+                <li><a href="#transactions">Transações</a></li>
+                <li><a href="#map">Mapa</a></li>
+            </ul>
+        </nav>
+
+        <main>
+            <section id="dashboard" class="active-section">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Total de Blocos</h3>
+                        <p id="total-blocks">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Contratos Ativos</h3>
+                        <p id="active-contracts">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Hash Rate</h3>
+                        <p id="hash-rate">0 H/s</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Tokens em Circulação</h3>
+                        <p id="token-supply">0 LGC</p>
+                    </div>
+                </div>
+
+                <div class="recent-activity">
+                    <h2>Atividade Recente</h2>
+                    <div id="activity-list" class="activity-list">
+                        <!-- Preenchido via JavaScript -->
+                    </div>
+                </div>
+            </section>
+
+            <section id="blocks" class="hidden">
+                <h2>Blocos da Cadeia</h2>
+                <div class="blocks-list" id="blocks-container">
+                    <!-- Preenchido via JavaScript -->
+                </div>
+            </section>
+
+            <section id="contracts" class="hidden">
+                <h2>Contratos Pendentes</h2>
+                <div class="contracts-list" id="contracts-container">
+                    <!-- Preenchido via JavaScript -->
+                </div>
+            </section>
+
+            <section id="mining" class="hidden">
+                <h2>Mineração</h2>
+                <div class="mining-controls">
+                    <div class="mining-status">
+                        <h3>Status da Mineração</h3>
+                        <p id="mining-status">Parado</p>
+                        <p>Hash Rate: <span id="current-hashrate">0 H/s</span></p>
+                        <p>Blocos Minerados: <span id="mined-blocks">0</span></p>
+                    </div>
+                    <div class="mining-actions">
+                        <button id="start-mining" class="btn primary">Iniciar Mineração</button>
+                        <button id="stop-mining" class="btn secondary" disabled>Parar Mineração</button>
+                    </div>
+                </div>
+                <div class="mining-rewards">
+                    <h3>Recompensas</h3>
+                    <p>Total: <span id="total-rewards">0 LGC</span></p>
+                    <p>Último Bloco: <span id="last-reward">0 LGC</span></p>
+                </div>
+            </section>
+
+            <section id="wallet" class="hidden">
+                <div class="wallet-container">
+                    <!-- Tela inicial de escolha -->
+                    <div id="wallet-choice" class="wallet-panel">
+                        <h2>Gerenciar Wallet</h2>
+                        <div class="wallet-options">
+                            <button id="show-login" class="btn primary btn-large">
+                                <i class="fas fa-sign-in-alt"></i>
+                                Acessar Wallet Existente
+                            </button>
+                            <div class="divider">ou</div>
+                            <button id="show-create" class="btn secondary btn-large">
+                                <i class="fas fa-plus-circle"></i>
+                                Criar Nova Wallet
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Formulário de Login -->
+                    <div id="wallet-login" class="wallet-panel hidden">
+                        <h2>Acessar Wallet</h2>
+                        <form id="login-form" class="wallet-form">
+                            <div class="form-group">
+                                <label for="mnemonic">Frase de Recuperação:</label>
+                                <textarea id="mnemonic" rows="3" required 
+                                    placeholder="Digite suas 12 palavras separadas por espaço"
+                                    class="mnemonic-input"></textarea>
+                                <small class="form-help">Digite as 12 palavras na ordem correta, separadas por espaço.</small>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" class="btn secondary" onclick="document.getElementById('wallet-choice').style.display='block';document.getElementById('wallet-login').style.display='none';">Voltar</button>
+                                <button type="submit" class="btn primary">Acessar Wallet</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Formulário de Criação -->
+                    <div id="wallet-create" class="wallet-panel hidden">
+                        <h2>Criar Nova Wallet</h2>
+                        <div class="create-wallet-info">
+                            <p>Ao criar uma nova wallet, você receberá uma frase de 12 palavras.</p>
+                            <p>⚠️ IMPORTANTE: Guarde essa frase em um lugar seguro!</p>
+                            <p>Ela será necessária para recuperar sua wallet no futuro.</p>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn secondary" onclick="document.getElementById('wallet-choice').style.display='block';document.getElementById('wallet-create').style.display='none';">Voltar</button>
+                            <button id="create-wallet-btn" class="btn primary">Criar Wallet</button>
+                        </div>
+                    </div>
+
+                    <!-- Wallet Ativa -->
+                    <div id="wallet-active" class="wallet-panel hidden">
+                        <div class="wallet-header">
+                            <h2>Sua Wallet</h2>
+                            <button id="disconnect-wallet" class="btn danger">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Desconectar
+                            </button>
+                        </div>
+                        
+                        <div class="wallet-info">
+                            <div class="info-card">
+                                <label>Endereço:</label>
+                                <div class="address-container">
+                                    <span id="wallet-address" class="monospace">-</span>
+                                    <button id="copy-address" class="btn icon" title="Copiar endereço">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="info-card">
+                                <label>Saldo:</label>
+                                <span id="wallet-balance" class="balance">0.000000 LGC</span>
+                            </div>
+                            
+                            <button id="backup-wallet" class="btn secondary">
+                                <i class="fas fa-download"></i>
+                                Backup da Wallet
+                            </button>
+                        </div>
+
+                        <div class="wallet-transactions">
+                            <h3>Enviar LGC</h3>
+                            <form id="send-transaction" class="transaction-form">
+                                <div class="form-group">
+                                    <label for="tx-to">Endereço de Destino:</label>
+                                    <input type="text" id="tx-to" required 
+                                        pattern="^LGC[a-fA-F0-9]{40}$" 
+                                        title="Endereço LGC inválido"
+                                        placeholder="LGC...">
+                                </div>
+                                <div class="form-group">
+                                    <label for="tx-amount">Valor (LGC):</label>
+                                    <input type="number" id="tx-amount" required 
+                                        min="0.000001" step="0.000001"
+                                        placeholder="0.000000">
+                                </div>
+                                <button type="submit" class="btn primary">Enviar</button>
+                            </form>
+
+                            <div class="transactions-section">
+                                <h3>Histórico de Transações</h3>
+                                <div id="tx-list" class="tx-list">
+                                    <!-- Preenchido via JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="transactions" class="hidden">
+                <h2>Transações</h2>
+                <div class="transaction-form">
+                    <h3>Nova Transação</h3>
+                    <form id="send-transaction">
+                        <div class="form-group">
+                            <label>Endereço de Destino</label>
+                            <input type="text" id="tx-to" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Quantidade (LGC)</label>
+                            <input type="number" id="tx-amount" min="0" step="0.000001" required>
+                        </div>
+                        <button type="submit" class="btn primary">Enviar</button>
+                    </form>
+                </div>
+                <div class="transaction-history">
+                    <h3>Histórico</h3>
+                    <div id="tx-list">
+                        <!-- Preenchido via JavaScript -->
+                    </div>
+                </div>
+            </section>
+
+            <section id="map" class="hidden">
+                <h2>Mapa de Entregas</h2>
+                <div id="delivery-map" class="map-container">
+                    <!-- Mapa será carregado aqui -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Templates para Cards -->
+    <template id="transaction-template">
+        <div class="transaction">
+            <div class="tx-header">
+                <span class="tx-type"></span>
+                <span class="tx-date"></span>
+            </div>
+            <div class="tx-body">
+                <span class="tx-amount"></span>
+                <span class="tx-address"></span>
+            </div>
+            <div class="tx-footer">
+                <span class="tx-status"></span>
+            </div>
+        </div>
+    </template>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/js/sw.js')
+                .then(registration => console.log('ServiceWorker registrado'))
+                .catch(err => console.log('Erro no registro do ServiceWorker:', err));
+        }
+    </script>
+
+    <!-- Core Scripts -->
+    <script src="/static/js/app.js"></script>
+    <script src="/static/js/ui.js"></script>
+    <script src="/static/js/blockchain.js"></script>
+    <script src="/static/js/wallet.js"></script>
+    <script src="/static/js/mining.js"></script>
+    <script src="/static/js/map.js"></script>
+</body>
+</html> 

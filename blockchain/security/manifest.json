@@ -1,0 +1,18 @@
+{
+    "version": "1.0",
+    "timestamp": 0,
+    "layers": {
+        "core": {
+            "modules": ["blockchain", "consensus", "wallet"],
+            "integrity_check": "sha256"
+        },
+        "security": {
+            "modules": ["trust_core", "integrity", "monitor"],
+            "integrity_check": "sha512"
+        },
+        "network": {
+            "modules": ["p2p", "sync", "discovery"],
+            "integrity_check": "sha256"
+        }
+    }
+} 

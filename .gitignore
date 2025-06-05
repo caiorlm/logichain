@@ -1,0 +1,181 @@
+# Environment files
+.env
+.env.*
+!.env.template
+.env.production
+.env.development
+.env.test
+
+# SSL certificates
+*.pem
+*.key
+*.crt
+*.csr
+*.srl
+
+# Private keys and secrets
+*.key
+*.secret
+*.pem
+private_key*
+*.private
+*.keystore
+
+# Data directories
+data/
+logs/
+keys/
+ssl/
+backups/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+.env
+.venv
+env/
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+log/
+logs/
+
+# Database
+*.db
+*.sqlite3
+*.sqlite
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# Node modules (if using web interface)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Compiled files
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Test coverage
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Blockchain specific
+blockchain/data/
+genesis_block.json
+GENESIS_BLOCK_OFFICIAL.*
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+
+# Config backups
+config/backups/
+*.backup
+*.bak
+
+# Generated documentation
+docs/_build/
+site/
+
+# Production files
+prod/
+production/
+
+# Monitoring
+prometheus/
+grafana/
+
+# Certificates and keys
+certs/
+*.pem
+*.key
+*.crt
+*.cer
+*.der
+*.priv
+
+# Security
+*.key
+*.pem
+*.crt
+*.cer
+*.p12
+*.pfx
+*.keystore
+*.truststore
+
+# Local development
+local/
+dev/
+*.local
+*.dev
+
+# Blockchain specific
+*.chain
+*.block
+mempool/
+EXTRAS/
+
+# Testing
+.coverage
+.pytest_cache/
+.hypothesis/
+htmlcov/
+
+# Documentation build
+docs/_build/
+site/
+
+# OS specific
+.DS_Store
+Thumbs.db 

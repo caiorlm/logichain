@@ -1,0 +1,269 @@
+# LogiChain - Blockchain para Logística
+# 
+# Este projeto usa apenas bibliotecas padrão do Python 3.8+
+# Não são necessárias dependências externas para o core do sistema
+#
+# Bibliotecas padrão utilizadas:
+# - uuid: Geração de identificadores únicos
+# - hashlib: Funções de hash para blockchain
+# - json: Serialização de dados
+# - datetime: Manipulação de datas e horários
+# - typing: Type hints
+# - enum: Enumerações
+# - dataclasses: Classes de dados
+# - time: Funções de tempo
+# - random: Geração de números aleatórios
+# - sqlite3: Banco de dados local
+# - threading: Concorrência
+# - asyncio: Programação assíncrona
+# - http.server: Servidor HTTP
+# - socket: Comunicação de rede
+# - logging: Logs do sistema
+# - secrets: Geração de números aleatórios criptograficamente seguros
+# - base64: Codificação de dados binários
+# - pathlib: Manipulação de caminhos
+# - argparse: Parsing de argumentos
+# - contextlib: Gerenciadores de contexto
+# - functools: Funções de ordem superior
+# - collections: Estruturas de dados adicionais
+# - re: Expressões regulares
+# - os: Interface com sistema operacional
+# - sys: Interface com Python runtime
+# - tempfile: Arquivos temporários
+# - shutil: Operações de alto nível em arquivos
+# - warnings: Avisos e alertas
+# - unittest: Testes unitários
+# - doctest: Testes em docstrings
+# - configparser: Parsing de arquivos de configuração
+# - csv: Manipulação de arquivos CSV
+# - decimal: Números decimais de precisão arbitrária
+# - io: Operações de I/O
+# - math: Funções matemáticas
+# - statistics: Funções estatísticas
+# - struct: Manipulação de dados binários
+# - textwrap: Formatação de texto
+# - urllib: Manipulação de URLs
+# - wsgiref: Interface WSGI
+# - xml: Parsing de XML
+# - zipfile: Manipulação de arquivos ZIP
+# - zlib: Compressão de dados
+
+# Para desenvolvimento e testes (opcionais):
+# pytest>=6.0.0
+# black>=21.0.0
+# flake8>=3.8.0
+# mypy>=0.800
+
+# Para APIs REST futuras (Fase 2):
+# fastapi>=0.68.0
+# uvicorn>=0.15.0
+# pydantic>=1.8.0
+
+# Para interface web futura (Fase 3):
+# flask>=2.0.0
+# jinja2>=3.0.0
+# bootstrap-flask>=1.5.0
+
+# Core Dependencies
+cryptography>=41.0.0
+fastapi==0.68.1
+uvicorn==0.15.0
+pydantic==1.8.2
+python-jose[cryptography]>=3.3.0
+python-multipart>=0.0.6
+mnemonic>=0.20
+eth-utils>=2.1.0
+aiohttp==3.8.1
+websockets==12.0
+click<8.1,>=7.0
+base58>=2.1.0
+
+# Network
+aiohttp==3.8.1
+websockets==12.0
+uvicorn==0.15.0
+
+# Database
+SQLAlchemy==1.4.23
+alembic>=1.11.0
+aiosqlite>=0.19.0
+
+# Testing
+pytest>=7.0.0
+pytest-asyncio==0.18.1
+pytest-cov>=4.0.0
+hypothesis>=6.82.0
+pytest-mock>=3.10.0
+
+# Development
+black>=22.0.0
+flake8>=6.0.0
+mypy>=1.0.0
+isort==5.10.1
+
+# Documentation
+mkdocs>=1.4.3
+mkdocs-material>=9.1.0
+
+# Monitoring
+prometheus-client>=0.17.0
+opentelemetry-api>=1.18.0
+opentelemetry-sdk>=1.18.0
+
+# Security
+passlib[bcrypt]>=1.7.4
+python-jose[cryptography]>=3.3.0
+
+# Smart Contracts
+eth-abi==4.1.0
+
+# Serialization
+msgpack==1.0.5
+protobuf==4.24.0
+
+# Concurrency
+aioprocessing==2.0.1
+
+# Fare System Dependencies
+python-dateutil>=2.8.2
+
+# API e Web
+python-multipart>=0.0.6
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# Utilitários
+python-dotenv==1.0.1
+psutil==5.8.0
+
+# Blockchain e Criptografia
+pycryptodome>=3.15.0
+ed25519>=1.5
+asyncio>=3.4.3
+
+# Web e API
+flask==2.0.1
+flask-cors==4.0.0
+requests==2.26.0
+websockets==12.0
+gunicorn==21.2.0
+
+# Banco de Dados
+sqlite3-api==2.0.1
+
+# Utilitários
+python-dotenv==1.0.1
+colorama==0.4.6
+tqdm==4.66.2
+
+# Blockchain specific
+merkletools==1.0.3
+
+# API and Dashboard
+streamlit==1.8.1
+plotly==5.6.0
+pandas==1.4.1
+
+# API and Dashboard
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# Web and API
+web3==5.24.0
+eth-account==0.5.6
+
+# Additional dependencies
+pyserial>=3.5
+
+pytest==8.0.2
+rich==13.7.0
+cryptography==42.0.5
+
+# GPS Libraries
+pyserial>=3.5
+pynmea2>=1.18.0
+gpsd-py3>=0.3.0
+
+# Android Support (optional)
+pyjnius>=1.4.1
+
+# Database
+sqlite3>=3.35.0
+
+# Utilities
+python-dateutil>=2.8.2
+pytz>=2021.3
+
+# Cryptography
+cryptography>=3.4.7
+pynacl>=1.4.0
+
+# Networking
+aiohttp>=3.8.1
+websockets>=10.1
+
+# Logging
+python-json-logger>=2.0.2
+
+# New dependencies from the code block
+pyOpenSSL>=22.0.0
+certifi>=2022.5.18
+aiomonitor>=0.4.5
+
+# New documentation dependencies
+Sphinx>=5.0.1
+sphinx-rtd-theme>=1.0.0
+
+# New utility dependencies
+pyyaml>=6.0
+ujson>=5.3.0
+msgpack>=1.0.4
+
+mmh3==3.0.0
+pyLoRa==0.3.1
+typing-extensions==4.5.0
+
+# Wallet CLI dependencies
+cmd2>=2.4.3
+cryptography>=41.0.0
+mnemonic>=0.20
+eth_account>=0.8.0
+web3>=6.11.1
+
+# Dependências externas
+cryptography>=3.4.7
+mnemonic>=0.20
+base58>=2.1.0
+web3>=5.23.0
+prometheus-client>=0.11.0
+aiohttp>=3.8.1
+pycryptodome>=3.10.1
+ecdsa>=0.16.1
+sqlalchemy>=1.4.0
+websockets>=10.0
+aiohttp>=3.8.0
+cryptography>=3.4.7
+
+# Development dependencies
+pytest>=6.0.0
+black>=21.0.0
+flake8>=3.8.0
+mypy>=0.800
+
+# Core dependencies
+mnemonic>=0.20
+pycryptodome>=3.10.1
+ecdsa>=0.16.1
+base58>=2.1.0
+sqlalchemy>=1.4.0
+websockets>=10.0
+aiohttp>=3.8.0
+cryptography>=3.4.7
+
+# Development dependencies
+pytest>=6.0.0
+black>=21.0.0
+flake8>=3.8.0
+mypy>=0.800
+
+schedule==1.2.0 

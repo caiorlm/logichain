@@ -1,0 +1,28 @@
+{
+    "version": "1.0",
+    "timestamp": 0,
+    "nodes": [
+        "main-node"
+    ],
+    "public_keys": {
+        "node1.trustcore.blockchain": "0000000000000000000000000000000000000000000000000000000000000000",
+        "node2.trustcore.blockchain": "0000000000000000000000000000000000000000000000000000000000000000",
+        "node3.trustcore.blockchain": "0000000000000000000000000000000000000000000000000000000000000000",
+        "node4.trustcore.blockchain": "0000000000000000000000000000000000000000000000000000000000000000",
+        "node5.trustcore.blockchain": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "roles": {
+        "node1.trustcore.blockchain": ["consensus", "security"],
+        "node2.trustcore.blockchain": ["consensus", "network"],
+        "node3.trustcore.blockchain": ["security", "integrity"],
+        "node4.trustcore.blockchain": ["network", "integrity"],
+        "node5.trustcore.blockchain": ["consensus", "security", "integrity"]
+    },
+    "quorum_weights": {
+        "node1.trustcore.blockchain": 1,
+        "node2.trustcore.blockchain": 1,
+        "node3.trustcore.blockchain": 1,
+        "node4.trustcore.blockchain": 1,
+        "node5.trustcore.blockchain": 1
+    }
+} 

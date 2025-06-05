@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /private/
+
+# Sitemap
+Sitemap: https://logichain.com/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 10 
