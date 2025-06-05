@@ -1,0 +1,311 @@
+version: '3.8'
+
+# Definição de redes internas
+networks:
+  blockchain_net:
+    internal: true
+    driver: bridge
+  api_net:
+    internal: true
+    driver: bridge
+  web_net:
+    driver: bridge  # Não é internal pois precisa ser acessível externamente
+
+# Definição de volumes persistentes
+volumes:
+  blockchain_data:
+    driver: local
+  contract_data:
+    driver: local
+  logs_data:
+    driver: local
+  keys_data:
+    driver: local
+  web_data:
+    driver: local
+  gps_data:
+  wallet_data:
+
+services:
+  # API Server
+  api_server:
+    build:
+      context: .
+      dockerfile: docker/api_server/Dockerfile
+    container_name: logichain_api
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5000:5000"
+    volumes:
+      - blockchain_data:/data/blockchain
+      - logs_data:/data/logs/api
+      - keys_data:/data/keys
+    environment:
+      - LOG_LEVEL=INFO
+      - DATA_DIR=/data
+      - MAX_CONNECTIONS=100
+      - RATE_LIMIT=100/minute
+    networks:
+      - api_net
+      - blockchain_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # P2P Network
+  p2p_network:
+    build:
+      context: .
+      dockerfile: docker/p2p_network/Dockerfile
+    container_name: logichain_p2p
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:30303:30303"
+      - "127.0.0.1:30304:30304"
+    volumes:
+      - blockchain_data:/data/blockchain
+      - logs_data:/data/logs/p2p
+    environment:
+      - LOG_LEVEL=INFO
+      - DATA_DIR=/data
+      - MAX_PEERS=50
+      - BOOTSTRAP_NODES=[]
+    networks:
+      - blockchain_net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s=socket.socket(); s.connect(('localhost', 30303))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Integrated Server
+  integrated_server:
+    build:
+      context: .
+      dockerfile: docker/integrated_server/Dockerfile
+    container_name: logichain_integrated
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - blockchain_data:/data/blockchain
+      - logs_data:/data/logs/integrated
+      - web_data:/data/web
+    environment:
+      - LOG_LEVEL=INFO
+      - DATA_DIR=/data
+      - OFFLINE_MODE=true
+    networks:
+      - api_net
+      - web_net
+      - blockchain_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - api_server
+      - p2p_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Web Server
+  web_server:
+    build:
+      context: .
+      dockerfile: docker/web_server/Dockerfile
+    container_name: logichain_web
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - web_data:/data/web
+      - logs_data:/data/logs/web
+    environment:
+      - LOG_LEVEL=INFO
+      - DATA_DIR=/data
+      - OFFLINE_MODE=true
+      - CACHE_ENABLED=true
+    networks:
+      - web_net
+      - api_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - api_server
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Validator Node
+  validator_node:
+    build:
+      context: .
+      dockerfile: docker/validator_node/Dockerfile
+    container_name: logichain_validator
+    restart: unless-stopped
+    volumes:
+      - blockchain_data:/data/blockchain
+      - logs_data:/data/logs/validator
+      - keys_data:/data/keys
+    environment:
+      - LOG_LEVEL=INFO
+      - DATA_DIR=/data
+      - STAKE_AMOUNT=1000
+      - OFFLINE_MODE=true
+      - MAX_BLOCK_SIZE=1MB
+    networks:
+      - blockchain_net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s=socket.socket(); s.connect(('localhost', 6000))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - p2p_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Executor Node
+  executor_node:
+    build:
+      context: .
+      dockerfile: docker/executor_node/Dockerfile
+    container_name: logichain_executor
+    restart: unless-stopped
+    volumes:
+      - blockchain_data:/data/blockchain
+      - contract_data:/data/contracts
+      - logs_data:/data/logs/executor
+      - keys_data:/data/keys
+    environment:
+      - LOG_LEVEL=INFO
+      - DATA_DIR=/data
+      - OFFLINE_MODE=true
+      - MAX_CONTRACT_SIZE=100KB
+    networks:
+      - blockchain_net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s=socket.socket(); s.connect(('localhost', 7000))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - p2p_network
+      - validator_node
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Establishment Node
+  establishment_node:
+    build:
+      context: .
+      dockerfile: docker/establishment_node/Dockerfile
+    container_name: logichain_establishment
+    restart: unless-stopped
+    volumes:
+      - blockchain_data:/data/blockchain
+      - contract_data:/data/contracts
+      - logs_data:/data/logs/establishment
+      - keys_data:/data/keys
+    environment:
+      - LOG_LEVEL=INFO
+      - DATA_DIR=/data
+      - ESTABLISHMENT_ID=default
+      - REPUTATION_THRESHOLD=0.7
+      - OFFLINE_MODE=true
+    networks:
+      - blockchain_net
+      - api_net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s=socket.socket(); s.connect(('localhost', 8000))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - p2p_network
+      - validator_node
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  driver_adapter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ID=${NODE_ID}
+      - GPS_DEVICE=${GPS_DEVICE:-/dev/ttyUSB0}
+      - GPS_BAUD=${GPS_BAUD:-9600}
+      - GPSD_HOST=localhost
+      - GPSD_PORT=2947
+      - DB_PATH=/data/gps/gps_cache.db
+      - WALLET_PATH=/data/wallet/wallet.json
+      - GPS_REQUIRED_POINTS=10
+      - GPS_ACCURACY_LIMIT=10.0
+      - GPS_MAX_RETRIES=5
+      - GPS_CHECK_INTERVAL=5
+      - OFFLINE_MODE=true
+      - MEMPOOL_SIZE=1000
+      - P2P_PORT=30303
+      - API_PORT=8000
+    volumes:
+      - gps_data:/data/gps
+      - wallet_data:/data/wallet
+      - /dev:/dev
+    devices:
+      - "${GPS_DEVICE:-/dev/ttyUSB0}:${GPS_DEVICE:-/dev/ttyUSB0}"
+    ports:
+      - "8000:8000"  # API
+      - "2947:2947"  # GPSD
+      - "30303:30303"  # P2P
+    networks:
+      - blockchain_net
+      - api_net
+    restart: unless-stopped
+    privileged: true  # Needed for GPS access
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - p2p_network
+      - validator_node
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# Other services... 

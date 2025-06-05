@@ -1,195 +1,232 @@
-# LogiChain
+# LogiChain - Sistema de Blockchain
 
-A decentralized, coordinate-based blockchain for real-world logistics and delivery tracking.
+Sistema completo de blockchain com gerenciamento de carteiras, mineração e transações.
 
-LogiChain is an innovative blockchain system designed for logistics, built in Python. It verifies Proof of Delivery (PoD) through secure geolocated checkpoints, tracks regional reputation, and fairly distributes rewards using smart contracts based on real-world coordinates.
+## Estrutura do Sistema
 
----
+O sistema é composto pelos seguintes módulos:
 
-## Key Features
+- `wallet_manager.py`: Gerenciamento de carteiras e saldos
+- `mining_manager.py`: Controle de mineração e recompensas
+- `transaction_manager.py`: Gerenciamento de transações e mempool
+- `blockchain_monitor.py`: Monitoramento e validação contínua
+- `init_and_validate.py`: Inicialização e validação do sistema
 
-* Decentralized smart contracts with real-world geocoordinates
-* Proof of Delivery (PoD) verification via cryptographic checkpoints
-* Fair reward system based on region and delivery reputation
-* Modular blockchain with hybrid consensus (PoW + PoD + BFT)
-* Encrypted logs and tamper-resistant data
-* Simulation tools and REST API included
+## Requisitos
 
----
+- Python 3.7+
+- SQLite3
+- Dependências listadas em `requirements.txt`
 
-## System Architecture
+## Instalação
 
-```
-logichain/
-├── core/
-│   ├── blockchain.py         # Blockchain coordination & block creation
-│   ├── coordinate_grid.py    # Global coordinate grid (65,341 zones)
-│   ├── contract.py           # Smart contract engine
-│   └── block.py              # Block structure & validation
-├── consensus/
-│   ├── bft_consensus.py      # Byzantine Fault Tolerant logic
-│   └── hybrid_consensus.py   # Hybrid PoW/PoD consensus mechanism
-├── security/
-│   ├── security_manager.py   # Replay protection, anomaly detection
-│   └── contracts/pod_contract.py # Proof of Delivery contracts
-├── network/
-│   ├── p2p_network.py        # Peer-to-peer communication
-│   └── node.py               # Node logic & message relay
-├── tokenomics/
-│   ├── tokenomics.py         # Token distribution & halving
-│   └── wallet.py             # Wallets & user balances
-├── api/
-│   └── rest_api.py           # FastAPI backend interface
-├── simulator/
-│   └── delivery_simulator.py # Delivery scenario testing
-├── storage/
-│   └── persistence.py        # Data persistence & recovery
-└── tests/
-    ├── test_integration.py   # System-wide integration tests
-    └── test_stress.py        # Load and stress testing
+1. Clone o repositório
+2. Instale as dependências:
+```bash
+pip install -r requirements.txt
 ```
 
----
+## Inicialização
 
-## Security Architecture
+Para inicializar o sistema pela primeira vez:
 
-* Replay protection: Nonce cache validation
-* Integrity: Hash-chained logs
-* Checkpoint control: Geofencing + timestamp proof
-* Anomaly detection: Contract frequency and misuse alerts
-* Contract expiration: Automatic time-based lockout
-* Rate limiting: Max transactions per coordinate region
-* Configurable thresholds:
-
-  * MAX\_OPERATIONS\_PER\_MINUTE = 60
-  * MAX\_COORDINATE\_OPS = 100
-  * TIMESTAMP\_TOLERANCE = 300
-  * BACKUP\_INTERVAL = 3600
-
----
-
-## Coordinate Grid
-
-* 181 × 361 coordinate grid (lat: -90~~90, lng: -180~~180)
-* 65,341 zones tracked
-* Stats per coordinate:
-
-  * Total contracts
-  * Success rate
-  * Avg. delivery time
-  * Last activity timestamp
-
----
-
-## Wallet Metrics
-
-```python
-class WalletMetrics:
-    total_deliveries: int
-    total_revenue: float
-    completed_contracts: int
-    avg_rating: float
-    reputation_score: float
+```bash
+python init_and_validate.py
 ```
 
----
+Este script irá:
+1. Criar as estruturas de diretórios necessárias
+2. Inicializar o banco de dados
+3. Criar o bloco gênesis (se necessário)
+4. Validar a integridade da blockchain
+5. Verificar todas as transações
+6. Recalcular os saldos das carteiras
+7. Gerar relatórios iniciais
 
-## Contract Lifecycle
+## Monitoramento
 
-* ContractState handles state transitions
-* Checkpoints include:
+Para iniciar o monitoramento contínuo:
 
-  * Timestamp
-  * GPS coordinates
-  * Temperature / Humidity
-  * Shock detection
-* Timestamps validated against tolerance
-
----
-
-## Simulated Deliveries
-
-```python
-def generate_contract_data():
-    return {
-        'cargo_type': ['Electronics', 'Food', 'Clothing', 'Materials'],
-        'weight': random.uniform(1, 1000),
-        'volume': random.uniform(1, 100),
-        'priority': ['Low', 'Medium', 'High', 'Urgent'],
-        'estimated_value': random.uniform(100, 10000)
-    }
+```bash
+python blockchain_monitor.py
 ```
 
----
+O monitor irá:
+- Verificar a integridade da blockchain a cada 10 minutos
+- Gerar relatórios diários
+- Alertar sobre problemas encontrados
 
-## Network Configuration
+## Estrutura de Diretórios
 
-* P2P default port: 30303
-* API default port: 8545
-* Max peers: 50
-* Mandatory: SSL/TLS encryption
-
----
-
-## Tokenomics
-
-```python
-@dataclass
-class TokenDistribution:
-    genesis_wallets: int = 1000
-    initial_balance: int = 1000
-    total_initial_supply: int = genesis_wallets * initial_balance
-    max_supply: int = 100_000_000
+```
+data/
+  blockchain/     # Banco de dados da blockchain
+  reports/        # Relatórios gerados
+  logs/          # Logs do sistema
 ```
 
-* Halving every 4 years
-* Mining rewards split between:
+## Funcionalidades
 
-  * Delivery drivers
-  * Validator pools
+### Carteiras
 
----
+- Criação e gerenciamento de carteiras
+- Rastreamento de saldos
+- Proteção contra saldo negativo
+- Histórico de transações
 
-## Testing Framework
+### Mineração
 
-* Integration Tests
-* Stress Tests:
+- Proof of Work com dificuldade ajustável
+- Recompensas de mineração
+- Validação de blocos
+- Processamento de transações pendentes
 
-  * 1000 contracts
-  * 5 checkpoints each
-  * Multi-threaded
-  * Batches of 50 ops
+### Transações
 
----
+- Validação de transações
+- Mempool com prioridade por taxa
+- Proteção contra duplo gasto
+- Rastreamento de status
 
-## Frontend (React)
+### Monitoramento
 
-* InteractiveMap: Geocoordinate visualization
-* GlobalStats: Realtime metrics dashboard
-* ContractList: Browse/filter contracts
-* SecurityLog: View security alerts
-* DeliverySimulator: Simulate full cycle
+- Verificação de integridade da cadeia
+- Validação de transações
+- Recálculo de saldos
+- Geração de relatórios
 
----
+## Relatórios
 
-## Logging & Monitoring
+O sistema gera três tipos de relatórios:
 
-Tracks:
+1. Relatório de Carteiras (`wallets_*.csv/json`)
+   - Endereço
+   - Saldo
+   - Total recebido/enviado
+   - Recompensas de mineração
+   - Blocos minerados
 
-* Wallet creation
-* Contract events
-* PoD checkpoints
-* Security incidents
-* State changes
+2. Relatório de Mineração (`mining_*.csv/json`)
+   - Endereço do minerador
+   - Blocos minerados
+   - Recompensas totais
+   - Primeiro/último bloco
 
----
+3. Relatório de Transações (`transactions_*.csv/json`)
+   - Hash da transação
+   - Tipo
+   - Origem/destino
+   - Valor
+   - Status
 
-## License
+## Segurança
 
-MIT License — see `LICENSE` file.
+O sistema implementa várias medidas de segurança:
 
----
+- Validação de saldo antes de transações
+- Proteção contra duplo gasto
+- Verificação de encadeamento de blocos
+- Validação de Proof of Work
+- Monitoramento contínuo
 
-## Contact
+## Contribuindo
 
-Developed by Caio RLM — Contributions welcome!
+1. Fork o repositório
+2. Crie uma branch para sua feature
+3. Commit suas mudanças
+4. Push para a branch
+5. Crie um Pull Request
+
+## Licença
+
+Este projeto está licenciado sob a MIT License.
+
+## Support
+
+For support, please open an issue in the GitHub repository or contact the development team.
+
+## Acknowledgments
+
+- LoRa Technology by Semtech
+- Cryptographic libraries contributors
+- Open source blockchain community
+
+# Blockchain Storage Migration
+
+## Overview
+This repository contains a blockchain implementation that has been updated to use a Bitcoin Core-like storage system. The new storage system replaces the previous SQLite database with a more efficient and scalable file-based solution.
+
+## Storage System
+The new storage system follows Bitcoin Core's approach:
+
+```
+/blocks/
+    - blk00000.dat  # Block data files
+    - blk00001.dat
+    - ...
+/chainstate/
+    - CURRENT       # Current active database version
+    - MANIFEST     # List of database files
+    - LOG         # Database log
+    /blocks/      # Block index
+    /coins/      # UTXO set
+    /wallets/    # Wallet data
+```
+
+## Migration Process
+To migrate your existing SQLite database to the new storage system, follow these steps:
+
+1. **Backup**
+   The migration process will automatically create a backup of your SQLite database at `data/blockchain/chain.db.backup`.
+
+2. **Migration**
+   Run the migration script:
+   ```bash
+   python migrate_all.py
+   ```
+
+   This script will:
+   - Migrate all data to the new storage system
+   - Verify the migration
+   - Clean up the old SQLite database (after confirmation)
+
+3. **Verification**
+   You can verify the new storage system separately:
+   ```bash
+   python verify_chaindb.py
+   ```
+
+4. **Cleanup**
+   To clean up the old SQLite database after a successful migration:
+   ```bash
+   python cleanup_sqlite.py
+   ```
+
+## Individual Scripts
+- `migrate_to_chaindb.py`: Performs the actual migration
+- `verify_chaindb.py`: Verifies the new storage system
+- `cleanup_sqlite.py`: Cleans up the old SQLite database
+- `migrate_all.py`: Runs the complete migration process
+
+## Recovery
+If something goes wrong during migration:
+1. The original SQLite database is preserved at `data/blockchain/chain.db.backup`
+2. You can restore it by copying it back to `data/blockchain/chain.db`
+
+## New Features
+The new storage system provides:
+- Better scalability for large blockchains
+- Improved performance for block and transaction queries
+- Bitcoin Core-like storage format
+- Better data integrity with separate block files
+- Efficient UTXO set management
+
+## Requirements
+- Python 3.7+
+- No additional dependencies required
+
+## Notes
+- The migration process is non-destructive
+- Your original data is backed up automatically
+- The process can be resumed if interrupted
+- All wallet balances and transaction history are preserved 
