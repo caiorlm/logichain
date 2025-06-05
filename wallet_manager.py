@@ -1,5 +1,5 @@
 """
-Wallet Management System for LogiChain
+Wallet manager with BIP39 mnemonic support and transaction signing
 """
 
 import sqlite3
@@ -9,6 +9,13 @@ import json
 from datetime import datetime
 import csv
 import os
+import hashlib
+import rsa
+from mnemonic import Mnemonic
+import binascii
+from typing import Optional, Dict, List
+import random
+import hmac
 
 # Configure logging
 logging.basicConfig(
@@ -22,10 +29,431 @@ DB_PATH = "data/blockchain/chain.db"
 REPORTS_PATH = "data/reports"
 
 class WalletManager:
-    def __init__(self, db_path=DB_PATH):
+    def __init__(self, db_path: str = "data/blockchain/chain.db"):
         self.db_path = db_path
-        self.setup_database()
+        self.mnemo = Mnemonic("english")
+        self.current_wallet = None
+        os.makedirs(os.path.dirname(db_path), exist_ok=True)
+        self.init_database()
         
+    def get_connection(self):
+        """Get database connection with proper settings"""
+        conn = sqlite3.connect(self.db_path, timeout=30.0)
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA busy_timeout=10000")
+        return conn
+
+    def init_database(self):
+        """Initialize wallet database tables"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            # Create wallets table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS wallets (
+                    address TEXT PRIMARY KEY,
+                    encrypted_private_key TEXT NOT NULL,
+                    public_key TEXT NOT NULL,
+                    mnemonic TEXT NOT NULL,
+                    nonce INTEGER DEFAULT 0,
+                    created_at REAL NOT NULL
+                )
+            """)
+            
+            # Create nonce tracking table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS nonce_tracker (
+                    address TEXT NOT NULL,
+                    nonce INTEGER NOT NULL,
+                    updated_at REAL NOT NULL,
+                    PRIMARY KEY (address)
+                )
+            """)
+            
+            # Create transactions table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS transactions (
+                    tx_hash TEXT PRIMARY KEY,
+                    block_hash TEXT,
+                    tx_type TEXT NOT NULL,
+                    from_address TEXT NOT NULL,
+                    to_address TEXT NOT NULL,
+                    amount REAL NOT NULL,
+                    timestamp REAL NOT NULL,
+                    nonce INTEGER DEFAULT 0,
+                    signature TEXT,
+                    data TEXT,
+                    status TEXT DEFAULT 'pending',
+                    fee REAL DEFAULT 0.0
+                )
+            """)
+            
+            # Create mempool table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS mempool (
+                    tx_hash TEXT PRIMARY KEY,
+                    raw_transaction TEXT NOT NULL,
+                    timestamp REAL NOT NULL,
+                    status TEXT DEFAULT 'pending'
+                )
+            """)
+            
+            conn.commit()
+        finally:
+            conn.close()
+
+    def _derive_deterministic_key(self, seed: bytes, length: int = 256) -> bytes:
+        """Derive a deterministic key from seed using HMAC"""
+        key = b''
+        counter = 0
+        while len(key) < length:
+            counter_bytes = counter.to_bytes(4, 'big')
+            h = hmac.new(seed, counter_bytes, hashlib.sha512)
+            key += h.digest()
+            counter += 1
+        return key[:length]
+
+    def create_wallet(self) -> Dict:
+        """Create new wallet with mnemonic phrase"""
+        # Generate mnemonic
+        mnemonic = self.mnemo.generate(strength=128)  # 12 words
+        seed = self.mnemo.to_seed(mnemonic)
+        
+        # Generate deterministic private key
+        private_key_bytes = self._derive_deterministic_key(seed)
+        private_key = int.from_bytes(private_key_bytes, 'big')
+        
+        # Create RSA key pair
+        e = 65537  # Standard RSA public exponent
+        p = rsa.prime.getprime(1024)
+        q = rsa.prime.getprime(1024)
+        n = p * q
+        phi = (p - 1) * (q - 1)
+        d = rsa.common.inverse(e, phi)
+        
+        # Create public and private key objects
+        pubkey = rsa.PublicKey(n, e)
+        privkey = rsa.PrivateKey(n, e, d, p, q)
+        
+        # Create wallet address from public key
+        address = "LOGI" + hashlib.sha256(pubkey.save_pkcs1()).hexdigest()[:40]
+        
+        # Encrypt private key
+        encrypted_privkey = binascii.hexlify(privkey.save_pkcs1()).decode()
+        
+        wallet = {
+            "address": address,
+            "encrypted_private_key": encrypted_privkey,
+            "public_key": binascii.hexlify(pubkey.save_pkcs1()).decode(),
+            "mnemonic": mnemonic,
+            "nonce": 0
+        }
+        
+        # Save to database
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                INSERT INTO wallets (
+                    address, encrypted_private_key, public_key,
+                    mnemonic, nonce, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?)
+            """, (
+                wallet["address"],
+                wallet["encrypted_private_key"],
+                wallet["public_key"],
+                wallet["mnemonic"],
+                wallet["nonce"],
+                time.time()
+            ))
+            conn.commit()
+        finally:
+            conn.close()
+        
+        self.current_wallet = wallet
+        return wallet
+
+    def load_wallet(self, address: str) -> Optional[Dict]:
+        """Load wallet by address"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                SELECT address, encrypted_private_key, public_key, 
+                       mnemonic, nonce
+                FROM wallets 
+                WHERE address = ?
+            """, (address,))
+            result = cursor.fetchone()
+            
+            if result:
+                wallet = {
+                    "address": result[0],
+                    "encrypted_private_key": result[1],
+                    "public_key": result[2],
+                    "mnemonic": result[3],
+                    "nonce": result[4]
+                }
+                self.current_wallet = wallet
+                return wallet
+            return None
+        finally:
+            conn.close()
+
+    def list_wallets(self) -> List[Dict]:
+        """List all wallets"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT address, mnemonic, nonce FROM wallets")
+            wallets = []
+            for row in cursor.fetchall():
+                wallets.append({
+                    "address": row[0],
+                    "mnemonic": row[1],
+                    "nonce": row[2]
+                })
+            return wallets
+        finally:
+            conn.close()
+
+    def get_balance(self, address: str) -> float:
+        """Get wallet balance"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            # Get incoming transactions
+            cursor.execute("""
+                SELECT COALESCE(SUM(amount), 0)
+                FROM transactions
+                WHERE to_address = ?
+                AND status = 'confirmed'
+            """, (address,))
+            incoming = cursor.fetchone()[0] or 0
+            
+            # Get outgoing transactions
+            cursor.execute("""
+                SELECT COALESCE(SUM(amount), 0)
+                FROM transactions
+                WHERE from_address = ?
+                AND from_address != ?
+                AND status = 'confirmed'
+            """, (address, '0' * 64))
+            outgoing = cursor.fetchone()[0] or 0
+            
+            return incoming - outgoing
+        finally:
+            conn.close()
+
+    def create_transaction(self, to_address: str, amount: float) -> Dict:
+        """Create and sign a new transaction"""
+        if not self.current_wallet:
+            raise Exception("No wallet loaded")
+            
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            # Check balance
+            balance = self.get_balance(self.current_wallet["address"])
+            if balance < amount:
+                raise Exception(f"Insufficient balance: {balance} < {amount}")
+            
+            # Get current nonce
+            cursor.execute("""
+                SELECT nonce FROM wallets
+                WHERE address = ?
+            """, (self.current_wallet["address"],))
+            current_nonce = cursor.fetchone()[0]
+            
+            # Create transaction
+            tx = {
+                "from_address": self.current_wallet["address"],
+                "to_address": to_address,
+                "amount": amount,
+                "nonce": current_nonce + 1,
+                "timestamp": time.time()
+            }
+            
+            # Sign transaction
+            tx_string = json.dumps(tx, sort_keys=True)
+            privkey = rsa.PrivateKey.load_pkcs1(binascii.unhexlify(self.current_wallet["encrypted_private_key"]))
+            signature = rsa.sign(tx_string.encode(), privkey, 'SHA-256')
+            tx["signature"] = binascii.hexlify(signature).decode()
+            
+            # Update nonce atomically
+            cursor.execute("""
+                UPDATE wallets
+                SET nonce = ?
+                WHERE address = ? AND nonce = ?
+            """, (tx["nonce"], self.current_wallet["address"], current_nonce))
+            
+            if cursor.rowcount == 0:
+                raise Exception("Nonce update failed - possible replay attack")
+            
+            # Add to mempool
+            cursor.execute("""
+                INSERT INTO mempool (tx_hash, raw_transaction, timestamp, status)
+                VALUES (?, ?, ?, ?)
+            """, (
+                hashlib.sha256(tx_string.encode()).hexdigest(),
+                json.dumps(tx),
+                tx["timestamp"],
+                "pending"
+            ))
+            
+            conn.commit()
+            return tx
+            
+        except Exception as e:
+            conn.rollback()
+            raise e
+        finally:
+            conn.close()
+
+    def verify_transaction(self, tx: Dict) -> bool:
+        """Verify transaction signature"""
+        if "signature" not in tx:
+            return False
+            
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            # Get sender's public key
+            cursor.execute("""
+                SELECT public_key FROM wallets
+                WHERE address = ?
+            """, (tx["from_address"],))
+            result = cursor.fetchone()
+            
+            if not result:
+                return False
+                
+            pubkey = rsa.PublicKey.load_pkcs1(binascii.unhexlify(result[0]))
+            
+            # Verify signature
+            tx_copy = tx.copy()
+            try:
+                signature = binascii.unhexlify(tx_copy.pop("signature"))
+            except:
+                return False
+                
+            tx_string = json.dumps(tx_copy, sort_keys=True)
+            
+            try:
+                rsa.verify(tx_string.encode(), signature, pubkey)
+                return True
+            except:
+                return False
+        finally:
+            conn.close()
+
+    def export_wallet(self, address: str, file_path: str):
+        """Export wallet to file"""
+        wallet = self.load_wallet(address)
+        if wallet:
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            with open(file_path, 'w') as f:
+                json.dump(wallet, f, indent=2)
+
+    def import_wallet(self, file_path: str) -> Optional[Dict]:
+        """Import wallet from file"""
+        try:
+            with open(file_path, 'r') as f:
+                wallet = json.load(f)
+                
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            try:
+                # Check if wallet already exists
+                cursor.execute("SELECT address FROM wallets WHERE address = ?", 
+                             (wallet["address"],))
+                if cursor.fetchone():
+                    raise Exception("Wallet already exists")
+                
+                cursor.execute("""
+                    INSERT INTO wallets (
+                        address, encrypted_private_key, public_key,
+                        mnemonic, nonce, created_at
+                    ) VALUES (?, ?, ?, ?, ?, ?)
+                """, (
+                    wallet["address"],
+                    wallet["encrypted_private_key"],
+                    wallet["public_key"],
+                    wallet["mnemonic"],
+                    wallet["nonce"],
+                    time.time()
+                ))
+                conn.commit()
+                return wallet
+            finally:
+                conn.close()
+        except Exception as e:
+            logger.error(f"Error importing wallet: {e}")
+            return None
+
+    def recover_wallet(self, mnemonic: str) -> Optional[Dict]:
+        """Recover wallet from mnemonic phrase"""
+        try:
+            if not self.mnemo.check(mnemonic):
+                raise Exception("Invalid mnemonic phrase")
+                
+            # Generate seed from mnemonic
+            seed = self.mnemo.to_seed(mnemonic)
+            
+            # Generate deterministic private key
+            private_key_bytes = self._derive_deterministic_key(seed)
+            private_key = int.from_bytes(private_key_bytes, 'big')
+            
+            # Create RSA key pair
+            e = 65537  # Standard RSA public exponent
+            p = rsa.prime.getprime(1024)
+            q = rsa.prime.getprime(1024)
+            n = p * q
+            phi = (p - 1) * (q - 1)
+            d = rsa.common.inverse(e, phi)
+            
+            # Create public and private key objects
+            pubkey = rsa.PublicKey(n, e)
+            privkey = rsa.PrivateKey(n, e, d, p, q)
+            
+            # Create wallet address
+            address = "LOGI" + hashlib.sha256(pubkey.save_pkcs1()).hexdigest()[:40]
+            
+            wallet = {
+                "address": address,
+                "encrypted_private_key": binascii.hexlify(privkey.save_pkcs1()).decode(),
+                "public_key": binascii.hexlify(pubkey.save_pkcs1()).decode(),
+                "mnemonic": mnemonic,
+                "nonce": 0
+            }
+            
+            # Save recovered wallet
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            try:
+                cursor.execute("""
+                    INSERT INTO wallets (
+                        address, encrypted_private_key, public_key,
+                        mnemonic, nonce, created_at
+                    ) VALUES (?, ?, ?, ?, ?, ?)
+                """, (
+                    wallet["address"],
+                    wallet["encrypted_private_key"],
+                    wallet["public_key"],
+                    wallet["mnemonic"],
+                    wallet["nonce"],
+                    time.time()
+                ))
+                conn.commit()
+                return wallet
+            finally:
+                conn.close()
+                
+        except Exception as e:
+            logger.error(f"Error recovering wallet: {e}")
+            return None
+
     def get_connection(self):
         """Get database connection"""
         return sqlite3.connect(self.db_path)

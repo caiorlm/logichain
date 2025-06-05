@@ -1,5 +1,5 @@
 """
-Block structure with enhanced security features
+Block structure with enhanced security features and Bitcoin-style validation
 """
 
 import hashlib
@@ -13,33 +13,34 @@ from dataclasses import dataclass, asdict
 from database_manager import DatabaseManager
 from transaction import Transaction
 
+class InvalidBlockError(Exception):
+    """Raised when block validation fails"""
+    pass
+
 @dataclass
-class Transaction:
-    """Transaction structure"""
-    tx_hash: str
-    tx_type: str
-    from_address: str
-    to_address: str
-    amount: float
+class BlockHeader:
+    """Immutable block header structure"""
+    version: int = 1
+    previous_hash: str
+    merkle_root: str
     timestamp: float
-    signature: Optional[str] = None
-    public_key: Optional[str] = None
-
-    def to_dict(self):
-        return asdict(self)
-
-    @staticmethod
-    def verify_signature(transaction_data: str, signature: bytes, public_key: bytes) -> bool:
-        """Verify transaction signature"""
-        try:
-            public_key_obj = ed25519.Ed25519PublicKey.from_public_bytes(public_key)
-            public_key_obj.verify(signature, transaction_data.encode())
-            return True
-        except Exception:
-            return False
+    difficulty: int
+    nonce: int
+    
+    def serialize(self) -> bytes:
+        """Serialize header for hashing"""
+        header = {
+            'version': self.version,
+            'previous_hash': self.previous_hash,
+            'merkle_root': self.merkle_root,
+            'timestamp': self.timestamp,
+            'difficulty': self.difficulty,
+            'nonce': self.nonce
+        }
+        return json.dumps(header, sort_keys=True).encode()
 
 class Block:
-    """Secure block implementation"""
+    """Secure block implementation with Bitcoin-style validation"""
     
     def __init__(self,
                  index: int,
@@ -50,6 +51,15 @@ class Block:
                  nonce: int = 0,
                  miner_address: str = "",
                  mining_reward: float = 50.0):
+        
+        # Validate inputs
+        if not isinstance(transactions, list):
+            raise InvalidBlockError("Transactions must be a list")
+        if not all(isinstance(tx, Transaction) for tx in transactions):
+            raise InvalidBlockError("All transactions must be Transaction objects")
+        if not isinstance(previous_hash, str) or len(previous_hash) != 64:
+            raise InvalidBlockError("Invalid previous hash format")
+            
         self.index = index
         self.timestamp = timestamp
         self.transactions = transactions
@@ -58,32 +68,40 @@ class Block:
         self.nonce = nonce
         self.miner_address = miner_address
         self.mining_reward = mining_reward
+        
+        # Calculate merkle root before hash
         self.merkle_root = self._calculate_merkle_root()
+        
+        # Create block header
+        self.header = BlockHeader(
+            previous_hash=previous_hash,
+            merkle_root=self.merkle_root,
+            timestamp=timestamp,
+            difficulty=difficulty,
+            nonce=nonce
+        )
+        
+        # Calculate block hash
         self.hash = self._calculate_hash()
-        self._db = DatabaseManager()
         
     def _calculate_hash(self) -> str:
-        """Calculate double SHA-256 hash of block header"""
-        block_header = {
-            'index': self.index,
-            'timestamp': self.timestamp,
-            'merkle_root': self.merkle_root,
-            'previous_hash': self.previous_hash,
-            'difficulty': self.difficulty,
-            'nonce': self.nonce
-        }
-        header_string = json.dumps(block_header, sort_keys=True)
-        
+        """Calculate double SHA-256 hash of block header (Bitcoin-style)"""
+        header_bytes = self.header.serialize()
         # Double SHA-256 (Bitcoin style)
-        first_hash = hashlib.sha256(header_string.encode()).digest()
+        first_hash = hashlib.sha256(header_bytes).digest()
         return hashlib.sha256(first_hash).hexdigest()
         
     def _calculate_merkle_root(self) -> str:
-        """Calculate Merkle root of transactions"""
+        """Calculate Merkle root of transactions (Bitcoin-style)"""
         if not self.transactions:
-            return hashlib.sha256("".encode()).hexdigest()
+            return hashlib.sha256(b"").hexdigest()
             
-        tx_hashes = [tx.tx_hash for tx in self.transactions]
+        def sha256d(data: bytes) -> bytes:
+            """Double SHA-256"""
+            return hashlib.sha256(hashlib.sha256(data).digest()).digest()
+            
+        # Get transaction hashes
+        tx_hashes = [bytes.fromhex(tx.tx_hash) for tx in self.transactions]
         
         while len(tx_hashes) > 1:
             if len(tx_hashes) % 2 != 0:
@@ -91,37 +109,46 @@ class Block:
                 
             new_tx_hashes = []
             for i in range(0, len(tx_hashes), 2):
+                # Concatenate and double-hash
                 combined = tx_hashes[i] + tx_hashes[i + 1]
-                new_hash = hashlib.sha256(combined.encode()).hexdigest()
+                new_hash = sha256d(combined)
                 new_tx_hashes.append(new_hash)
             tx_hashes = new_tx_hashes
             
-        return tx_hashes[0]
+        return tx_hashes[0].hex()
         
     def mine_block(self, difficulty: int = None) -> bool:
         """Mine block with proof of work"""
         if difficulty is not None:
             self.difficulty = difficulty
+            self.header.difficulty = difficulty
             
         target = "0" * self.difficulty
+        max_nonce = 2**32  # Standard Bitcoin nonce range
         
-        while self.hash[:self.difficulty] != target:
-            self.nonce += 1
+        for nonce in range(max_nonce):
+            self.nonce = nonce
+            self.header.nonce = nonce
             self.hash = self._calculate_hash()
             
-        return True
+            if self.hash[:self.difficulty] == target:
+                return True
+                
+        return False
         
     def verify_proof_of_work(self) -> bool:
         """Verify block's proof of work"""
+        if self.hash != self._calculate_hash():
+            return False
         return self.hash[:self.difficulty] == "0" * self.difficulty
         
     def verify_transactions(self) -> bool:
         """Verify all transactions in block"""
-        # Verify Merkle root
+        # 1. Verify Merkle root matches transactions
         if self._calculate_merkle_root() != self.merkle_root:
             return False
             
-        # Verify mining reward (should be exactly one)
+        # 2. Verify exactly one mining reward
         mining_rewards = [tx for tx in self.transactions if tx.tx_type == 'mining_reward']
         if len(mining_rewards) != 1:
             return False
@@ -132,25 +159,45 @@ class Block:
             reward_tx.from_address != "0" * 64):
             return False
             
+        # 3. Verify all transaction signatures
+        for tx in self.transactions:
+            if tx.tx_type != 'mining_reward':
+                if not tx.verify_signature():
+                    return False
+                    
         return True
         
-    def save(self, atomic: bool = True) -> bool:
-        """Save block to database"""
-        return self._db.save_block(self, atomic)
-        
-    @classmethod
-    def get_block(cls, block_hash: str) -> Optional['Block']:
-        """Get block from database by hash"""
-        db = DatabaseManager()
-        return db.get_block(block_hash)
-        
-    @classmethod
-    def get_latest_block(cls) -> Optional['Block']:
-        """Get latest confirmed block from database"""
-        db = DatabaseManager()
-        return db.get_latest_block()
-        
-    def to_dict(self):
+    def is_valid(self) -> bool:
+        """Validate entire block"""
+        try:
+            # 1. Check block hash matches header
+            if self.hash != self._calculate_hash():
+                return False
+                
+            # 2. Check timestamp is reasonable
+            current_time = time.time()
+            two_hours = 7200  # 2 hours in seconds
+            if self.timestamp > current_time + two_hours:
+                return False  # Block too far in future
+                
+            # 3. Check Merkle root matches transactions
+            if self.merkle_root != self._calculate_merkle_root():
+                return False
+                
+            # 4. Check PoW
+            if not self.verify_proof_of_work():
+                return False
+                
+            # 5. Check transactions
+            if not self.verify_transactions():
+                return False
+                
+            return True
+            
+        except Exception:
+            return False
+            
+    def to_dict(self) -> Dict:
         """Convert block to dictionary"""
         return {
             'hash': self.hash,
@@ -165,46 +212,24 @@ class Block:
             'mining_reward': self.mining_reward
         }
         
-    def add_transaction(self, transaction: Transaction) -> bool:
-        """Add transaction to block"""
-        # Verify transaction signature if not mining reward
-        if transaction.tx_type != 'mining_reward':
-            if not transaction.signature or not transaction.public_key:
-                return False
-                
-            # Verify signature
-            tx_data = json.dumps(transaction.to_dict(), sort_keys=True)
-            if not Transaction.verify_signature(
-                tx_data,
-                bytes.fromhex(transaction.signature),
-                bytes.fromhex(transaction.public_key)
-            ):
-                return False
-                
-        self.transactions.append(transaction)
-        self.merkle_root = self._calculate_merkle_root()
-        self.hash = self._calculate_hash()
-        return True
+    @classmethod
+    def from_dict(cls, data: Dict) -> 'Block':
+        """Create block from dictionary"""
+        transactions = [
+            Transaction(**tx_data)
+            for tx_data in data['transactions']
+        ]
         
-    def is_valid(self) -> bool:
-        """Validate entire block"""
-        # 1. Check block hash
-        if self.hash != self._calculate_hash():
-            return False
-            
-        # 2. Check Merkle root
-        if self.merkle_root != self._calculate_merkle_root():
-            return False
-            
-        # 3. Check PoW
-        if not self.verify_proof_of_work():
-            return False
-            
-        # 4. Check transactions
-        if not self.verify_transactions():
-            return False
-            
-        return True
+        return cls(
+            index=data['index'],
+            timestamp=data['timestamp'],
+            transactions=transactions,
+            previous_hash=data['previous_hash'],
+            difficulty=data['difficulty'],
+            nonce=data['nonce'],
+            miner_address=data.get('miner_address', ""),
+            mining_reward=data.get('mining_reward', 50.0)
+        )
         
     @staticmethod
     def create_genesis_block() -> 'Block':
@@ -228,23 +253,4 @@ class Block:
             nonce=0,
             miner_address="0" * 64,
             mining_reward=0
-        )
-        
-    @classmethod
-    def from_dict(cls, data: Dict) -> 'Block':
-        """Create block from dictionary"""
-        transactions = [
-            Transaction(**tx_data)
-            for tx_data in data['transactions']
-        ]
-        
-        return cls(
-            index=data['index'],
-            timestamp=data['timestamp'],
-            transactions=transactions,
-            previous_hash=data['previous_hash'],
-            difficulty=data['difficulty'],
-            nonce=data['nonce'],
-            miner_address=data.get('miner_address', ""),
-            mining_reward=data.get('mining_reward', 50.0)
         ) 

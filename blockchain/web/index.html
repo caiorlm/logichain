@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LogiChain Control Panel</title>
+    <style>
+        :root {
+            --bg-dark: #1a1a1a;
+            --bg-card: #242424;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --accent: #4CAF50;
+            --accent-hover: #45a049;
+            --border: #333;
+            --error: #ff4444;
+            --success: #00C851;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 30px;
+            background: var(--bg-card);
+            padding: 5px;
+            border-radius: 8px;
+        }
+
+        .nav-tab {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 6px;
+            transition: background-color 0.3s;
+        }
+
+        .nav-tab.active {
+            background: var(--accent);
+        }
+
+        .nav-tab:hover:not(.active) {
+            background: var(--border);
+        }
+
+        .section {
+            display: none;
+            gap: 20px;
+        }
+
+        .section.active {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            color: var(--accent);
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background: var(--accent-hover);
+        }
+
+        .copy-btn {
+            width: auto;
+            padding: 6px 12px;
+            margin-left: 10px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .info-label {
+            color: var(--text-secondary);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            color: var(--text-secondary);
+        }
+
+        .peer-list {
+            list-style: none;
+        }
+
+        .peer-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .status.confirmed {
+            background: var(--success);
+        }
+
+        .status.pending {
+            background: var(--accent);
+        }
+
+        @media (max-width: 768px) {
+            .section.active {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-tabs {
+                flex-direction: column;
+            }
+
+            .card {
+                margin-bottom: 20px;
+            }
+        }
+
+        .login-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--bg-card);
+            padding: 10px 20px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .login-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--error);
+        }
+
+        .login-indicator.logged-in {
+            background: var(--success);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Login Status -->
+        <div class="login-status">
+            <div id="loginIndicator" class="login-indicator"></div>
+            <span id="loginStatus">Not logged in</span>
+            <button id="logoutBtn" class="hidden" onclick="logout()">Logout</button>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showSection('wallet')">Wallet</button>
+            <button class="nav-tab" onclick="showSection('mining')">Mining / P2P Pool</button>
+            <button class="nav-tab" onclick="showSection('transactions')">Send / Receive</button>
+        </div>
+
+        <!-- Wallet Section -->
+        <div id="wallet" class="section active">
+            <div id="loginCard" class="card">
+                <h2>Login to Wallet</h2>
+                <input type="text" id="walletAddress" placeholder="Enter wallet address">
+                <input type="password" id="walletPassword" placeholder="Enter password">
+                <button onclick="loginWallet()">Login</button>
+            </div>
+
+            <div id="walletInfo" class="card hidden">
+                <h2>Wallet Info</h2>
+                <div class="info-row">
+                    <span class="info-label">Address:</span>
+                    <span id="currentWalletAddress">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Balance:</span>
+                    <span id="balance">0.00 LOGI</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Status:</span>
+                    <span id="walletStatus" class="status">Active</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Recover Wallet</h2>
+                <textarea id="mnemonic" rows="4" placeholder="Enter your 12-word recovery phrase"></textarea>
+                <button onclick="recoverWallet()">Recover Wallet</button>
+            </div>
+        </div>
+
+        <!-- Mining Section -->
+        <div id="mining" class="section">
+            <div id="miningLoginMessage" class="card">
+                <h2>Login Required</h2>
+                <p>Please login to your wallet to start mining.</p>
+            </div>
+
+            <div id="miningControls" class="hidden">
+                <div class="card">
+                    <h2>Start Mining</h2>
+                    <select id="threadCount">
+                        <option value="1">1 Thread</option>
+                        <option value="2">2 Threads</option>
+                        <option value="4">4 Threads</option>
+                        <option value="8">8 Threads</option>
+                    </select>
+                    <button id="miningButton" onclick="toggleMining()">Start Mining</button>
+                </div>
+
+                <div class="card">
+                    <h2>Mining Status</h2>
+                    <div class="info-row">
+                        <span class="info-label">Latest Block:</span>
+                        <span id="latestBlock">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Nonce:</span>
+                        <span id="currentNonce">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Mining Time:</span>
+                        <span id="miningTime">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Total Mined:</span>
+                        <span id="totalMined">0 blocks</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Current Balance:</span>
+                        <span id="miningBalance">0.00 LOGI</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Peers Connected</h2>
+                    <ul class="peer-list" id="peerList">
+                        <li>No peers connected</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transactions Section -->
+        <div id="transactions" class="section">
+            <div class="card">
+                <h2>Send Transaction</h2>
+                <input type="text" id="recipientAddress" placeholder="Recipient Address">
+                <input type="number" id="amount" placeholder="Amount (LOGI)" step="0.000001">
+                <button onclick="sendTransaction()">Send</button>
+            </div>
+
+            <div class="card">
+                <h2>Receive Funds</h2>
+                <div class="info-row">
+                    <span id="receiveAddress">-</span>
+                    <button class="copy-btn" onclick="copyAddress()">Copy</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Transaction History</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>TxID</th>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionHistory">
+                        <tr>
+                            <td colspan="5">No transactions yet</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isLoggedIn = false;
+        let currentWallet = null;
+
+        // Login/Logout Functions
+        async function loginWallet() {
+            const address = document.getElementById('walletAddress').value;
+            const password = document.getElementById('walletPassword').value;
+
+            if (!address || !password) {
+                alert('Please enter both address and password');
+                return;
+            }
+
+            try {
+                // API call placeholder - replace with actual API call
+                // const response = await fetch('/api/login', {
+                //     method: 'POST',
+                //     body: JSON.stringify({ address, password })
+                // });
+                // const data = await response.json();
+                
+                // Simulated successful login
+                isLoggedIn = true;
+                currentWallet = {
+                    address: address,
+                    balance: "100.00" // This would come from the API
+                };
+
+                updateLoginStatus();
+                updateWalletDisplay();
+                updateMiningAccess();
+            } catch (error) {
+                alert('Login failed: ' + error.message);
+            }
+        }
+
+        function logout() {
+            isLoggedIn = false;
+            currentWallet = null;
+            stopMining(); // Stop mining if active
+            updateLoginStatus();
+            updateWalletDisplay();
+            updateMiningAccess();
+        }
+
+        function updateLoginStatus() {
+            const indicator = document.getElementById('loginIndicator');
+            const status = document.getElementById('loginStatus');
+            const logoutBtn = document.getElementById('logoutBtn');
+
+            if (isLoggedIn) {
+                indicator.classList.add('logged-in');
+                status.textContent = `Logged in: ${currentWallet.address.substring(0, 8)}...`;
+                logoutBtn.classList.remove('hidden');
+            } else {
+                indicator.classList.remove('logged-in');
+                status.textContent = 'Not logged in';
+                logoutBtn.classList.add('hidden');
+            }
+        }
+
+        function updateWalletDisplay() {
+            const loginCard = document.getElementById('loginCard');
+            const walletInfo = document.getElementById('walletInfo');
+            const currentWalletAddress = document.getElementById('currentWalletAddress');
+            const balance = document.getElementById('balance');
+
+            if (isLoggedIn && currentWallet) {
+                loginCard.classList.add('hidden');
+                walletInfo.classList.remove('hidden');
+                currentWalletAddress.textContent = currentWallet.address;
+                balance.textContent = `${currentWallet.balance} LOGI`;
+            } else {
+                loginCard.classList.remove('hidden');
+                walletInfo.classList.add('hidden');
+                document.getElementById('walletAddress').value = '';
+                document.getElementById('walletPassword').value = '';
+            }
+        }
+
+        function updateMiningAccess() {
+            const miningLoginMessage = document.getElementById('miningLoginMessage');
+            const miningControls = document.getElementById('miningControls');
+
+            if (isLoggedIn) {
+                miningLoginMessage.classList.add('hidden');
+                miningControls.classList.remove('hidden');
+            } else {
+                miningLoginMessage.classList.remove('hidden');
+                miningControls.classList.add('hidden');
+                if (isMining) {
+                    stopMining();
+                }
+            }
+        }
+
+        // Mining Functions
+        let isMining = false;
+        function toggleMining() {
+            if (!isLoggedIn) {
+                alert('Please login first to start mining');
+                return;
+            }
+
+            const button = document.getElementById('miningButton');
+            const threadCount = document.getElementById('threadCount').value;
+            
+            isMining = !isMining;
+            if (isMining) {
+                button.textContent = 'Stop Mining';
+                button.style.background = 'var(--error)';
+                startMining(threadCount);
+            } else {
+                button.textContent = 'Start Mining';
+                button.style.background = 'var(--accent)';
+                stopMining();
+            }
+        }
+
+        function startMining(threads) {
+            // API call placeholder
+            console.log('Starting mining with threads:', threads);
+        }
+
+        function stopMining() {
+            // API call placeholder
+            console.log('Stopping mining');
+        }
+
+        // Transaction Functions
+        async function sendTransaction() {
+            const recipient = document.getElementById('recipientAddress').value;
+            const amount = document.getElementById('amount').value;
+            
+            if (!recipient || !amount) {
+                alert('Please fill in all fields');
+                return;
+            }
+            // API call placeholder
+            console.log('Sending transaction:', { recipient, amount });
+        }
+
+        function copyAddress() {
+            const address = document.getElementById('receiveAddress').textContent;
+            navigator.clipboard.writeText(address);
+            alert('Address copied to clipboard!');
+        }
+
+        // Update Functions
+        function updateMiningStatus() {
+            if (!isLoggedIn) return;
+            // API call placeholder to update mining stats
+        }
+
+        function updateWalletInfo() {
+            if (!isLoggedIn) return;
+            // API call placeholder to update wallet info
+        }
+
+        function updateTransactionHistory() {
+            // API call placeholder to update transaction list
+        }
+
+        // Initialize
+        window.onload = function() {
+            updateLoginStatus();
+            updateWalletDisplay();
+            updateMiningAccess();
+
+            // Set up periodic updates only when logged in
+            setInterval(() => {
+                if (isLoggedIn) {
+                    updateMiningStatus();
+                    updateWalletInfo();
+                }
+            }, 5000);
+        };
+    </script>
+</body>
+</html> 
